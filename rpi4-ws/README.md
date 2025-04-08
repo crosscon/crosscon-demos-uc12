@@ -43,7 +43,7 @@ cd $RPI4_WS
 
 In this example the sdcard is `/dev/sdb` and the partitions are `/dev/sdb1`, `/dev/sdb2`, etc.
 
-### i) Start by checking which SD card you have  
+### i) Start by checking which SD card you have
 ```sh
 lsblk -o NAME,RM,SIZE,MODEL | grep 1
 ```
@@ -95,7 +95,7 @@ Format the created partition to a fat filesystem:
 sudo mkfs.fat /dev/<your SD card>1 -n boot
 ```
 
-Remove and insert the sd card to automatically mount it. 
+Remove and insert the sd card to automatically mount it.
 
 ![SDformat](./img/.gif/SDformat.gif)
 
@@ -363,7 +363,7 @@ cd $ROOT
 ![COMPbw](./img/.gif/COMPbw.gif)
 
 ## Step 6: Compile Malicious Client and Trusted Application
-```
+```sh
 cd malicous_ta
 BUILDROOT=`pwd`/../buildroot/build-aarch64/
 export CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
@@ -379,7 +379,7 @@ export DESTDIR=./to_buildroot-aarch64
 export DEBUG=0
 export CFG_TEE_TA_LOG_LEVEL=2
 export O=`pwd`/out-aarch64
-export aarch64_TARGET=y 
+export aarch64_TARGET=y
 rm -rf out-aarch64/
 ## make sure we have things setup for first OP-TEE
 find . -name "Makefile" -exec sed -i "s/\-lteec2$/\-lteec/g" {} +
@@ -451,8 +451,8 @@ dtc -I dts -O dtb rpi4-ws/rpi4.dts > rpi4-ws/rpi4.dtb
 ```sh
 cd lloader
 
-rm linux-rpi4.bin
-rm linux-rpi4.elf
+rm -f linux-rpi4.bin
+rm -f linux-rpi4.elf
 make  \
     IMAGE=../linux/build-aarch64/arch/arm64/boot/Image \
     DTB=../rpi4-ws/rpi4.dtb \
@@ -479,7 +479,7 @@ manually. The script expects `SDCARD` to be set (e.g.,`/media/$USER/boot`)
 
 Insert the sd card in the board's sd slot.
 
-Connect to the Raspberry Pi's UART using a USB-to-TTL adapter to connect to the Raspberry Pi's GPIO header UART pins. 
+Connect to the Raspberry Pi's UART using a USB-to-TTL adapter to connect to the Raspberry Pi's GPIO header UART pins.
 
 - VCC (Pin 4 on RPI4) → Connect to VCC on the USB-to-TTL adapter. This provides power to the adapter.
 - GND (Pin 6 on RPI4) → Connect to GND on the adapter to establish a common ground.
@@ -520,4 +520,3 @@ After Linux finishes booting you may execute xtest in both OP-TEE VMs.
 xtest -t regression
 xtest2 -t regression
 ```
-
