@@ -24,12 +24,10 @@ make -C CROSSCON-Hypervisor/ \
 	CROSS_COMPILE=aarch64-none-elf- \
         -j`nproc`
 
-cp -vr firmware/boot/start* $SDCARD
-cp -uv CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-dual-vTEE/crossconhyp.bin /media/$USER/boot
+cp -vr firmware/boot/start* "$SDCARD"
+cp -uv CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-dual-vTEE/crossconhyp.bin "$SDCARD"
 
-umount /media/$USER/boot
+umount "$SDCARD"
 
 
 popd
-
-

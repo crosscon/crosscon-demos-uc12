@@ -471,6 +471,7 @@ pc, and wait for it to mount the boot partition. Otherwise mount the sd card
 manually. The script expects `SDCARD` to be set (e.g.,`/media/$USER/boot`)
 
 ``` sh
+cd $RPI4_WS
 ./build-demo-vtee.sh
 ```
 ![RUNsimpledemo](./img/.gif/RUNsimpledemo.gif)
