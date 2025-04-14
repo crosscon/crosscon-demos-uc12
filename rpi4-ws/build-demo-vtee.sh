@@ -23,13 +23,10 @@ make -C CROSSCON-Hypervisor/ \
         SDEES="sdSGX sdTZ" \
 	CROSS_COMPILE=aarch64-none-elf- \
         -j`nproc`
-export SDCARD=/media/$USER/boot
-cp -vr rpi4-ws/firmware/boot/start* $SDCARD
-cp -uv CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-single-vTEE/crossconhyp.bin /media/$USER/boot
+export SDCARD="${SDCARD:-/media/$USER/boot}"
+cp -vr rpi4-ws/firmware/boot/start* "$SDCARD"
+cp -uv CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-single-vTEE/crossconhyp.bin "$SDCARD"
 
-umount /media/$USER/boot
+umount "$SDCARD"
 
 popd
-
-
-
