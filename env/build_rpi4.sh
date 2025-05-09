@@ -1,21 +1,63 @@
 #!/bin/bash
 
-set -e
+STEP_0_NAME="Setup: set up FW components"
+STEP_1_NAME="1: Build OP-TEE OS"
+STEP_2_NAME="2: Build Linux file system (buildroot)"
+STEP_3_NAME="3: Build OP-TEE Clients"
+STEP_4_NAME="4: Build OP-TEE xtest"
+STEP_5_NAME="5: Compile Bitcoin wallet UA an TA"
+STEP_6_NAME="6: Compile Malicious UA and TA"
+STEP_7_NAME="7: Finalize Linux file system"
+STEP_8_NAME="8: Build linux"
+STEP_9_NAME="9: Bind Linux image and device tree"
 
-export ROOT=`pwd`
+ROOT=$(git -C "$(dirname "$(realpath $0)")" rev-parse --show-toplevel)
 
-header() {
-    cat <<EOF
-##########
-# Step $1 #
-##########
-EOF
+RUN_ALL=false
+STEP_RANGE=""
+
+BUILDROOT_CONF_PATH="support/br-aarch64.config"
+LINUX_CONF_PATH="support/linux-aarch64.config"
+
+print_usage() {
+  echo "Available steps:"
+  for i in {0..9}; do
+    step_name_var="STEP_${i}_NAME"
+    echo "  $i - ${!step_name_var}"
+  done
+
+  echo
+  echo "Usage:"
+  echo "  $0 --all - execute all steps."
+  echo "  $0 --steps=X-Y - execute steps from X to Y."
+  echo "  [--buildroot_conf=PATH] [--linux_conf=PATH] - if not provided, defaults will be used."
+  exit 1
 }
 
-setup() {
-    header S
+print_step_header() {
+  local step="$1"
+  local prefix="Step: "
+  local content="$prefix$step"
+  local length=${#content}
+  local border=$(printf '%*s' $((length + 4)) '' | tr ' ' '#')
+
+  echo "$border"
+  echo "# $content #"
+  echo "$border"
+}
+
+# Copy PKCS#11 TA ".TA" files
+extra_step_1() {
+    TA_FILE_PATH=optee_os/optee-rpi4/export-ta_arm64/ta/fd02c9da-306c-48c7-a49c-bbd827ae86ee.ta
+    BUILDROOT_PATH=buildroot/build-aarch64/target/lib/optee_armtz/
+    BUILDROOT_PATH_2=buildroot/build-aarch64/target/lib/optee_armtz/
+    cp $TA_FILE_PATH $BUILDROOT_PATH
+    cp $TA_FILE_PATH $BUILDROOT_PATH_2
+}
+
+step_0() {
     cd rpi4-ws
-    export RPI4_WS=`pwd`
+    export RPI4_WS=$(pwd)
 
     mkdir bin
 
@@ -36,7 +78,6 @@ setup() {
 }
 
 step_1() {
-    header 1
     cd optee_os
 
     OPTEE_DIR="./"
@@ -59,7 +100,7 @@ step_1() {
         PLATFORM=$PLATFORM \
         PLATFORM_FLAVOR=$PLATFORM_FLAVOR \
         ARCH=$ARCH \
-        CFG_PKCS11_TA=n \
+        CFG_PKCS11_TA=y \
         CFG_SHMEM_START=$SHMEM_START \
         CFG_SHMEM_SIZE=$SHMEM_SIZE \
         CFG_CORE_DYN_SHM=n \
@@ -94,7 +135,7 @@ step_1() {
         PLATFORM=$PLATFORM \
         PLATFORM_FLAVOR=$PLATFORM_FLAVOR \
         ARCH=$ARCH \
-        CFG_PKCS11_TA=n \
+        CFG_PKCS11_TA=y \
         CFG_SHMEM_START=$SHMEM_START \
         CFG_SHMEM_SIZE=$SHMEM_SIZE \
         CFG_CORE_DYN_SHM=n \
@@ -121,7 +162,6 @@ step_1() {
 }
 
 step_2() {
-    header 2
     if [ ! -e buildroot ]; then
         wget https://buildroot.org/downloads/buildroot-2022.11.1.tar.gz
         tar -xf buildroot-2022.11.1.tar.gz
@@ -130,7 +170,7 @@ step_2() {
 
     mkdir -p buildroot/build-aarch64
 
-    cp support/br-aarch64.config buildroot/build-aarch64/.config
+    cp $BUILDROOT_CONF_PATH buildroot/build-aarch64/.config
 
     cd buildroot
 
@@ -140,7 +180,6 @@ step_2() {
 }
 
 step_3() {
-    header 3
     cd optee_client
 
     git checkout master
@@ -152,43 +191,44 @@ step_3() {
 }
 
 step_4() {
-    header 4
     cd optee_test
 
-    BUILDROOT=`pwd`/../buildroot/build-aarch64/
+    BUILDROOT=$(pwd)/../buildroot/build-aarch64/
     export CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
     export HOST_CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
     export TA_CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
     export ARCH=aarch64
     export PLATFORM=plat-vexpress
     export PLATFORM_FLAVOR=qemu_armv8a
-    export TA_DEV_KIT_DIR=`pwd`/../optee_os/optee-rpi4/export-ta_arm64
-    export TEEC_EXPORT=`pwd`/../optee_client/out-aarch64/export/usr/
-    export OPTEE_CLIENT_EXPORT=`pwd`/../optee_client/out-aarch64/export/usr/
+    export TA_DEV_KIT_DIR=$(pwd)/../optee_os/optee-rpi4/export-ta_arm64
+    export TEEC_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
+    export OPTEE_CLIENT_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
     export CFG_TA_OPTEE_CORE_API_COMPAT_1_1=y
     export DESTDIR=./to_buildroot-aarch64
     export DEBUG=0
     export CFG_TEE_TA_LOG_LEVEL=0
     export CFLAGS=-O2
-    export O=`pwd`/out-aarch64
+    export O=$(pwd)/out-aarch64
     export CFG_PKCS11_TA=n
 
     rm -rf $O
     rm -rf to_buildroot-aarch64/
     find . -name "Makefile" -exec sed -i "s/\-lteec2$/\-lteec/g" {} +
+    find . -name "Makefile" -exec sed -i "s/\-lckteec2$/\-lckteec/g" {} +
     find . -name "Makefile" -exec sed -i "s/optee2_armtz/optee_armtz/g" {} +
     make clean
     make -j`nproc`
     make install
 
 
-    export O=`pwd`/out2-aarch64
+    export O=$(pwd)/out2-aarch64
     export DESTDIR=./to_buildroot-aarch64-2
-    export TA_DEV_KIT_DIR=`pwd`/../optee_os/optee2-rpi4/export-ta_arm64
-    export TEEC_EXPORT=`pwd`/../optee_client/out2-aarch64/export/usr/
-    export OPTEE_CLIENT_EXPORT=`pwd`/../optee_client/out2-aarch64/export/usr/
-    rm -rf `pwd`/out2-aarch64
+    export TA_DEV_KIT_DIR=$(pwd)/../optee_os/optee2-rpi4/export-ta_arm64
+    export TEEC_EXPORT=$(pwd)/../optee_client/out2-aarch64/export/usr/
+    export OPTEE_CLIENT_EXPORT=$(pwd)/../optee_client/out2-aarch64/export/usr/
+    rm -rf $(pwd)/out2-aarch64
     find . -name "Makefile" -exec sed -i "s/\-lteec$/\-lteec2/g" {} +
+    find . -name "Makefile" -exec sed -i "s/\-lckteec$/\-lckteec2/g" {} +
     find . -name "Makefile" -exec sed -i "s/optee_armtz/optee2_armtz/g" {} +
     make clean
     make -j`nproc`
@@ -201,24 +241,23 @@ step_4() {
 }
 
 step_5() {
-    header 5
     cd bitcoin-wallet
 
-    BUILDROOT=`pwd`/../buildroot/build-aarch64/
+    BUILDROOT=$(pwd)/../buildroot/build-aarch64/
 
     export CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
     export HOST_CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
     export TA_CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
     export ARCH=aarch64
     export PLATFORM=plat-virt
-    export TA_DEV_KIT_DIR=`pwd`/../optee_os/optee-rpi4/export-ta_arm64
-    export TEEC_EXPORT=`pwd`/../optee_client/out-aarch64/export/usr/
-    export OPTEE_CLIENT_EXPORT=`pwd`/../optee_client/out-aarch64/export/usr/
+    export TA_DEV_KIT_DIR=$(pwd)/../optee_os/optee-rpi4/export-ta_arm64
+    export TEEC_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
+    export OPTEE_CLIENT_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
     export CFG_TA_OPTEE_CORE_API_COMPAT_1_1=n
     export DESTDIR=./to_buildroot-aarch64
     export DEBUG=0
     export CFG_TEE_TA_LOG_LEVEL=0
-    export O=`pwd`/out-aarch64
+    export O=$(pwd)/out-aarch64
 
     rm -rf out-aarch64/
     ## make sure we have things setup for first OP-TEE
@@ -235,12 +274,12 @@ step_5() {
     chmod +x to_buildroot-aarch64/bin/bitcoin_wallet_ca
 
     ## setup second OP-TEE
-    export O=`pwd`/out2-aarch64
+    export O=$(pwd)/out2-aarch64
     export DESTDIR=./to_buildroot-aarch64-2
-    export TA_DEV_KIT_DIR=`pwd`/../optee_os/optee2-rpi4/export-ta_arm64
-    export TEEC_EXPORT=`pwd`/../optee_client/out2-aarch64/export/usr/
-    export OPTEE_CLIENT_EXPORT=`pwd`/../optee_client/out2-aarch64/export/usr/
-    rm -rf `pwd`/out2-aarch64
+    export TA_DEV_KIT_DIR=$(pwd)/../optee_os/optee2-rpi4/export-ta_arm64
+    export TEEC_EXPORT=$(pwd)/../optee_client/out2-aarch64/export/usr/
+    export OPTEE_CLIENT_EXPORT=$(pwd)/../optee_client/out2-aarch64/export/usr/
+    rm -rf $(pwd)/out2-aarch64
     find . -name "Makefile" -exec sed -i "s/\-lteec/\-lteec2/g" {} +
     find . -name "Makefile" -exec sed -i "s/optee_armtz/optee2_armtz/g" {} +
     make clean
@@ -261,22 +300,21 @@ step_5() {
 }
 
 step_6() {
-    header 6
     cd malicous_ta
-    BUILDROOT=`pwd`/../buildroot/build-aarch64/
+    BUILDROOT=$(pwd)/../buildroot/build-aarch64/
     export CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
     export HOST_CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
     export TA_CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
     export ARCH=aarch64
     export PLATFORM=plat-virt
-    export TA_DEV_KIT_DIR=`pwd`/../optee_os/optee-rpi4/export-ta_arm64
-    export TEEC_EXPORT=`pwd`/../optee_client/out-aarch64/export/usr/
-    export OPTEE_CLIENT_EXPORT=`pwd`/../optee_client/out-aarch64/export/usr/
+    export TA_DEV_KIT_DIR=$(pwd)/../optee_os/optee-rpi4/export-ta_arm64
+    export TEEC_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
+    export OPTEE_CLIENT_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
     export CFG_TA_OPTEE_CORE_API_COMPAT_1_1=n
     export DESTDIR=./to_buildroot-aarch64
     export DEBUG=0
     export CFG_TEE_TA_LOG_LEVEL=2
-    export O=`pwd`/out-aarch64
+    export O=$(pwd)/out-aarch64
     export aarch64_TARGET=y
     rm -rf out-aarch64/
     ## make sure we have things setup for first OP-TEE
@@ -294,12 +332,12 @@ step_6() {
     cp host/malicious_ca to_buildroot-aarch64/bin/malicious_ca
     chmod +x to_buildroot-aarch64/bin/malicious_ca
     ## setup second OP-TEE
-    export O=`pwd`/out2-aarch64
+    export O=$(pwd)/out2-aarch64
     export DESTDIR=./to_buildroot-aarch64-2
-    export TA_DEV_KIT_DIR=`pwd`/../optee_os/optee2-rpi4/export-ta_arm64
-    export TEEC_EXPORT=`pwd`/../optee_client/out2-aarch64/export/usr/
-    export OPTEE_CLIENT_EXPORT=`pwd`/../optee_client/out2-aarch64/export/usr/
-    rm -rf `pwd`/out2-aarch64
+    export TA_DEV_KIT_DIR=$(pwd)/../optee_os/optee2-rpi4/export-ta_arm64
+    export TEEC_EXPORT=$(pwd)/../optee_client/out2-aarch64/export/usr/
+    export OPTEE_CLIENT_EXPORT=$(pwd)/../optee_client/out2-aarch64/export/usr/
+    rm -rf $(pwd)/out2-aarch64
     find . -name "Makefile" -exec sed -i "s/\-lteec/\-lteec2/g" {} +
     find . -name "Makefile" -exec sed -i "s/optee_armtz/optee2_armtz/g" {} +
     make clean
@@ -316,7 +354,9 @@ step_6() {
 }
 
 step_7() {
-    header 7
+    # Call extra step to copy ".TA" files
+    extra_step_1
+
     cd buildroot
 
     make O=build-aarch64/ -j`nproc`
@@ -325,9 +365,8 @@ step_7() {
 }
 
 step_8() {
-    header 8
-    mkdir linux/build-aarch64/
-    cp support/linux-aarch64.config linux/build-aarch64/.config
+    mkdir -p linux/build-aarch64/
+    cp $LINUX_CONF_PATH linux/build-aarch64/.config
 
     cd linux
 
@@ -337,9 +376,8 @@ step_8() {
 }
 
 step_9() {
-    header 9
     dtc -I dts -O dtb rpi4-ws/rpi4.dts > rpi4-ws/rpi4.dtb
-        cd lloader
+    cd lloader
 
     rm -f linux-rpi4.bin
     rm -f linux-rpi4.elf
@@ -353,15 +391,48 @@ step_9() {
     cd $ROOT
 }
 
-setup
-step_1
-step_2
-step_3
-step_4
-step_5
-step_6
-step_7
-step_8
-step_9
+set -e
+
+# Handle sysargs
+for arg in "$@"; do
+  case "$arg" in
+    --all)
+      RUN_ALL=true
+      ;;
+    --steps=*)
+      STEP_RANGE="${arg#*=}"
+      ;;
+    --buildroot_conf=*)
+      BUILDROOT_CONF_PATH="${arg#*=}"
+      ;;
+    --linux_conf=*)
+      LINUX_CONF_PATH="${arg#*=}"
+      ;;
+    *)
+      echo "Unknown argument: $arg"
+      print_usage
+      ;;
+  esac
+done
+
+# Parse params
+if [ "$RUN_ALL" = true ]; then
+  STEP_START=0
+  STEP_END=9
+elif [[ "$STEP_RANGE" =~ ^([0-9]+)-([0-9]+)$ ]]; then
+  STEP_START=${BASH_REMATCH[1]}
+  STEP_END=${BASH_REMATCH[2]}
+else
+  print_usage
+fi
+
+# Run steps
+for ((i=STEP_START; i<=STEP_END; i++)); do
+  step_name_var="STEP_${i}_NAME"
+  print_step_header "${!step_name_var}"
+
+  "step_$i"
+done
+
 
 echo "Done!"

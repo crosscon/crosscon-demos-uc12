@@ -46,6 +46,9 @@ RUN apt-get update && \
     libncurses-dev \
     fdisk \
     dosfstools \
+    libglib2.0-dev \
+    python3-distutils \
+    libpixman-1-dev \
     sudo \
     vim
 

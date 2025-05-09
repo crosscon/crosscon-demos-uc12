@@ -34,10 +34,11 @@ env/run.sh
 Inside the container, use below script to build the demo `rpi4-ws` package.
 
 ```bash
-env/scripts/build_rpi4-ws_demo.sh
+env/build_rpi4.sh
 ```
 
-The script follows exactly what can be found in [the README](../rpi4-ws/README.md) on how to build the demo.
+The script steps follow exactly what can be found in
+[the README](../rpi4-ws/README.md) on how to build the demo.
 
 
 ## Copying the files to the SD card.
@@ -47,77 +48,19 @@ Inside the container, follow the
 chapter to setup the filesystem on SD card.  
 **NOTE: Make sure your card did not get mounted by default on host!**
 
-### Copying firmware files and linux device tree
-
-To copy firmware files and Linux and device tree image onto the SD, mount the
-card at `/media/$USER/boot`
-
-```bash
-sudo mkdir -p /media/root/boot
-sudo mount /dev/mmcblk0p1 /media/root/boot
-```
-
-...and use the following commands.
-
-```bash
-SDCARD=/media/root/boot
-
-sudo cp -vr rpi4-ws/firmware/boot/* $SDCARD
-sudo cp -v rpi4-ws/config.txt $SDCARD
-sudo cp -v rpi4-ws/bin/bl31.bin $SDCARD
-sudo cp -v rpi4-ws/bin/u-boot.bin $SDCARD
-sudo cp -v lloader/linux-rpi4.bin $SDCARD
-```
-
 ### Building and copying the CROSSCON Hypervisor
 
 Scripts `rpi4-ws/build-demo-vtee.sh` and `rpi4-ws/build-demo-dual-vtee.sh`
 build the hypervisor and transfer the files to the SD card. More can be read
 [here](https://github.com/3mdeb/CROSSCON-Hypervisor-and-TEE-Isolation-Demos/blob/master/rpi4-ws/README.md#simple-demo).
 
-The scripts cannot be used directly due to privileges being set up the way they
-are inside the container, so we'll have to build hypervisor and copy the files manually.
-
-To build the hypervisor run the following.
-
-```bash
-cd rpi4-ws
-
-CONFIG_REPO=`pwd`/configs
-
-pushd ..
-
-make -C CROSSCON-Hypervisor/ \
-	PLATFORM=rpi4 \
-	CONFIG_BUILTIN=y \
-	CONFIG_REPO=$CONFIG_REPO \
-	CONFIG=rpi4-single-vTEE \
-	OPTIMIZATIONS=0 \
-        SDEES="sdSGX sdTZ" \
-	CROSS_COMPILE=aarch64-none-elf- \
-        clean
-
-make -C CROSSCON-Hypervisor/ \
-	PLATFORM=rpi4 \
-	CONFIG_BUILTIN=y \
-	CONFIG_REPO=$CONFIG_REPO \
-	CONFIG=rpi4-single-vTEE \
-	OPTIMIZATIONS=0 \
-        SDEES="sdSGX sdTZ" \
-	CROSS_COMPILE=aarch64-none-elf- \
-        -j`nproc`
-
-popd
-
-cd -
-```
-
-To copy the files onto SD card, run:
+The `env/hyp_build_and_copy.sh` script can be used to build hypervisor and copy
+all needed files ono SD card. **Warning**: The script auto-mounts
+`/dev/mmcblk0p1` partition and copies files there. If this is not how the device
+is represented on your system modify the script accordingly.
 
 ```bash
-sudo cp -vr rpi4-ws/firmware/boot/start* "$SDCARD" && \
-sudo cp -uv CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-single-vTEE/crossconhyp.bin "$SDCARD" && \
-sudo umount "$SDCARD"
+env/hyp_build_and_copy.sh
 ```
 
 ## QEMU build
