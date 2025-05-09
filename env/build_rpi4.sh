@@ -48,14 +48,20 @@ print_step_header() {
 
 # Copy PKCS#11 TA ".TA" files
 extra_step_1() {
+    cd "$ROOT"
+
     TA_FILE_PATH=optee_os/optee-rpi4/export-ta_arm64/ta/fd02c9da-306c-48c7-a49c-bbd827ae86ee.ta
     BUILDROOT_PATH=buildroot/build-aarch64/target/lib/optee_armtz/
     BUILDROOT_PATH_2=buildroot/build-aarch64/target/lib/optee_armtz/
     cp $TA_FILE_PATH $BUILDROOT_PATH
     cp $TA_FILE_PATH $BUILDROOT_PATH_2
+
+    cd "$ROOT"
 }
 
 step_0() {
+    cd "$ROOT"
+
     cd rpi4-ws
     export RPI4_WS=$(pwd)
 
@@ -78,6 +84,8 @@ step_0() {
 }
 
 step_1() {
+    cd "$ROOT"
+
     cd optee_os
 
     OPTEE_DIR="./"
@@ -162,6 +170,8 @@ step_1() {
 }
 
 step_2() {
+    cd "$ROOT"
+
     if [ ! -e buildroot ]; then
         wget https://buildroot.org/downloads/buildroot-2022.11.1.tar.gz
         tar -xf buildroot-2022.11.1.tar.gz
@@ -180,6 +190,8 @@ step_2() {
 }
 
 step_3() {
+    cd "$ROOT"
+
     cd optee_client
 
     git checkout master
@@ -191,6 +203,8 @@ step_3() {
 }
 
 step_4() {
+    cd "$ROOT"
+
     cd optee_test
 
     BUILDROOT=$(pwd)/../buildroot/build-aarch64/
@@ -220,7 +234,6 @@ step_4() {
     make -j`nproc`
     make install
 
-
     export O=$(pwd)/out2-aarch64
     export DESTDIR=./to_buildroot-aarch64-2
     export TA_DEV_KIT_DIR=$(pwd)/../optee_os/optee2-rpi4/export-ta_arm64
@@ -241,6 +254,8 @@ step_4() {
 }
 
 step_5() {
+    cd "$ROOT"
+
     cd bitcoin-wallet
 
     BUILDROOT=$(pwd)/../buildroot/build-aarch64/
@@ -295,11 +310,12 @@ step_5() {
     cp host/wallet to_buildroot-aarch64-2/bin/bitcoin_wallet_ca2
     chmod +x to_buildroot-aarch64-2/bin/bitcoin_wallet_ca2
 
-
     cd $ROOT
 }
 
 step_6() {
+    cd "$ROOT"
+
     cd malicous_ta
     BUILDROOT=$(pwd)/../buildroot/build-aarch64/
     export CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
@@ -354,6 +370,8 @@ step_6() {
 }
 
 step_7() {
+    cd "$ROOT"
+
     # Call extra step to copy ".TA" files
     extra_step_1
 
@@ -365,6 +383,8 @@ step_7() {
 }
 
 step_8() {
+    cd "$ROOT"
+
     mkdir -p linux/build-aarch64/
     cp $LINUX_CONF_PATH linux/build-aarch64/.config
 
@@ -376,6 +396,8 @@ step_8() {
 }
 
 step_9() {
+    cd "$ROOT"
+
     dtc -I dts -O dtb rpi4-ws/rpi4.dts > rpi4-ws/rpi4.dtb
     cd lloader
 
@@ -433,6 +455,5 @@ for ((i=STEP_START; i<=STEP_END; i++)); do
 
   "step_$i"
 done
-
 
 echo "Done!"
