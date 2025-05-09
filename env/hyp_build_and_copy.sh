@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 sudo mkdir -p /media/root/boot
 sudo mount /dev/mmcblk0p1 /media/root/boot
 
@@ -43,8 +45,8 @@ popd
 
 cd -
 
-sudo cp -vr rpi4-ws/firmware/boot/start* "$SDCARD" && \
-sudo cp -uv CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-single-vTEE/crossconhyp.bin "$SDCARD" && \
+sudo cp -vr rpi4-ws/firmware/boot/start* "$SDCARD"
+sudo cp -uv CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-single-vTEE/crossconhyp.bin "$SDCARD"
 sudo umount "$SDCARD"
 
 echo Done!
