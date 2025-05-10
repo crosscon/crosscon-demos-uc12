@@ -55,12 +55,12 @@ build the hypervisor and transfer the files to the SD card. More can be read
 [here](https://github.com/3mdeb/CROSSCON-Hypervisor-and-TEE-Isolation-Demos/blob/master/rpi4-ws/README.md#simple-demo).
 
 The `env/hyp_build_and_copy.sh` script can be used to build hypervisor and copy
-all needed files ono SD card. **Warning**: The script auto-mounts
+all needed files onto SD card. **Warning**: The script auto-mounts
 `/dev/mmcblk0p1` partition and copies files there. If this is not how the device
-is represented on your system modify the script accordingly.
+is represented on your system, use another `DEV_PATH`.
 
 ```bash
-env/hyp_build_and_copy.sh
+DEV_PATH=/dev/mmcblk0p1 env/hyp_build_and_copy.sh
 ```
 
 ## QEMU build

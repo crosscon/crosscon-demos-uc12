@@ -2,8 +2,10 @@
 
 set -e
 
+[ -z "${DEV_PATH}" ] && echo "export DEV_PATH pointing to the SD card partition device to be flashed (e.g. /dev/mmcblk0p1)" && exit 1
+
 sudo mkdir -p /media/root/boot
-sudo mount /dev/mmcblk0p1 /media/root/boot
+sudo mount "${DEV_PATH}" /media/root/boot
 
 sleep 2
 
