@@ -53,6 +53,8 @@ extra_step_1() {
     TA_FILE_PATH=optee_os/optee-rpi4/export-ta_arm64/ta/fd02c9da-306c-48c7-a49c-bbd827ae86ee.ta
     BUILDROOT_PATH=buildroot/build-aarch64/target/lib/optee_armtz/
     BUILDROOT_PATH_2=buildroot/build-aarch64/target/lib/optee_armtz/
+
+    mkdir -p "${BUILDROOT_PATH}" "${BUILDROOT_PATH_2}"
     cp $TA_FILE_PATH $BUILDROOT_PATH
     cp $TA_FILE_PATH $BUILDROOT_PATH_2
 
