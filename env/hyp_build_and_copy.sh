@@ -49,6 +49,7 @@ cd -
 
 sudo cp -vr rpi4-ws/firmware/boot/start* "$SDCARD"
 sudo cp -uv CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-single-vTEE/crossconhyp.bin "$SDCARD"
+sudo sync
 sudo umount "$SDCARD"
 
 echo Done!
