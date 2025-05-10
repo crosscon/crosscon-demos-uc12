@@ -67,7 +67,7 @@ step_0() {
     cd rpi4-ws
     export RPI4_WS=$(pwd)
 
-    mkdir bin
+    mkdir -p bin
 
     git clone https://github.com/raspberrypi/firmware.git --depth 1 --branch 1.20230405
 
