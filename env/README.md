@@ -8,6 +8,7 @@ compilation of the CROSSCON hypervisor.
 ## Clone the repository
 
 Clone the repository by executing following command.
+
 ```bash
 git clone --recurse-submodules git@github.com:3mdeb/CROSSCON-Hypervisor-and-TEE-Isolation-Demos.git crosscon-demos && \
 cd crosscon-demos
@@ -34,33 +35,61 @@ env/run.sh
 Inside the container, use below script to build the demo `rpi4-ws` package.
 
 ```bash
-env/build_rpi4.sh
+env/build_rpi4.sh --all
 ```
 
 The script steps follow exactly what can be found in
-[the README](../rpi4-ws/README.md) on how to build the demo.
-
-
-## Copying the files to the SD card.
-
-Inside the container, follow the
-"[Prepare SDCard](https://github.com/3mdeb/CROSSCON-Hypervisor-and-TEE-Isolation-Demos/blob/master/rpi4-ws/README.md#prepare-sdcard)"
-chapter to setup the filesystem on SD card.  
-**NOTE: Make sure your card did not get mounted by default on host!**
-
-### Building and copying the CROSSCON Hypervisor
-
-Scripts `rpi4-ws/build-demo-vtee.sh` and `rpi4-ws/build-demo-dual-vtee.sh`
-build the hypervisor and transfer the files to the SD card. More can be read
-[here](https://github.com/3mdeb/CROSSCON-Hypervisor-and-TEE-Isolation-Demos/blob/master/rpi4-ws/README.md#simple-demo).
-
-The `env/hyp_build_and_copy.sh` script can be used to build hypervisor and copy
-all needed files onto SD card. **Warning**: The script auto-mounts
-`/dev/mmcblk0p1` partition and copies files there. If this is not how the device
-is represented on your system, use another `DEV_PATH`.
+[the README](../rpi4-ws/README.md) on how to build the demo. This command will
+perform all steps. Run the command without any parameters to see other options.
 
 ```bash
-DEV_PATH=/dev/mmcblk0p1 env/hyp_build_and_copy.sh
+env/build_rpi4.sh
+```
+
+## Creating and flashing the image
+
+The following command can be used to build the hypervisor and create an image
+with all required files included.
+
+```bash
+sudo env/create_hyp_img.sh
+```
+
+The command will output the image to `/work/crosscon/crosscon-demo-img.img`.
+Note: The command must be run with `sudo`.
+
+The built image can be then flashed to SD card.
+
+```bash
+sudo dd if=./crosscon-demo-img.img of=<drive> bs=4M conv=fsync
+```
+
+## Running the image
+
+Use UART to USB adapter to connect RPI to your machine and start up minicom.
+
+```bash
+minicom -D /dev/ttyUSB0 -b 115200
+```
+
+Supply power to RPI and hit any key when asked to stop u-boot from attempting
+auto-boot.
+
+```bash
+[...]
+scanning bus xhci_pci for devices... 2 USB Device(s) found
+       scanning usb for storage devices... 0 Storage Device(s) found
+Hit any key to stop autoboot:  0
+U-Boot>
+```
+
+_Note: If you missed the timeframe, you can spam CTRL+C many times to achieve
+same result._
+
+Boot the image by manually loading it into the memory and "jumping" to it.
+
+```bash
+fatload mmc 0 0x200000 crossconhyp.bin; go 0x200000
 ```
 
 ## QEMU build

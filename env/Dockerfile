@@ -49,6 +49,8 @@ RUN apt-get update && \
     libglib2.0-dev \
     python3-distutils \
     libpixman-1-dev \
+    parted \
+    udev \
     sudo \
     vim
 

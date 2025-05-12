@@ -29,7 +29,7 @@ print_usage() {
   echo
   echo "Usage:"
   echo "  $0 --all - execute all steps."
-  echo "  $0 --steps=X-Y - execute steps from X to Y."
+  echo "  $0 --steps=X-Y - execute steps from X to Y (inclusive)."
   echo "  [--buildroot_conf=PATH] [--linux_conf=PATH] - if not provided, defaults will be used."
   exit 1
 }
@@ -52,7 +52,7 @@ extra_step_1() {
 
     TA_FILE_PATH=optee_os/optee-rpi4/export-ta_arm64/ta/fd02c9da-306c-48c7-a49c-bbd827ae86ee.ta
     BUILDROOT_PATH=buildroot/build-aarch64/target/lib/optee_armtz/
-    BUILDROOT_PATH_2=buildroot/build-aarch64/target/lib/optee_armtz/
+    BUILDROOT_PATH_2=buildroot/build-aarch64/target/lib/optee2_armtz/
 
     mkdir -p "${BUILDROOT_PATH}" "${BUILDROOT_PATH_2}"
     cp $TA_FILE_PATH $BUILDROOT_PATH
@@ -69,16 +69,21 @@ step_0() {
 
     mkdir -p bin
 
-    git clone https://github.com/raspberrypi/firmware.git --depth 1 --branch 1.20230405
+    git clone https://github.com/raspberrypi/firmware.git --depth 1 --branch 1.20230405 \
+        || echo "# Skipping cloning RPI firmware."
 
-    git clone https://github.com/u-boot/u-boot.git --depth 1 --branch v2022.10
+    git clone https://github.com/u-boot/u-boot.git --depth 1 --branch v2022.10 \
+        || echo "# Skipping cloning u-boot."
+
     cd u-boot
     make rpi_4_defconfig
     make -j`nproc`  CROSS_COMPILE=aarch64-none-elf-
     cp -v u-boot.bin ../bin/
     cd $RPI4_WS
 
-    git clone https://github.com/bao-project/arm-trusted-firmware.git --branch bao/demo --depth 1
+    git clone https://github.com/bao-project/arm-trusted-firmware.git --branch bao/demo --depth 1 \
+        || echo "# Skipping cloning bao hypervisor."
+
     cd arm-trusted-firmware
     make PLAT=rpi4 -j`nproc`  CROSS_COMPILE=aarch64-none-elf-
     cp -v build/rpi4/release/bl31.bin ../bin/
