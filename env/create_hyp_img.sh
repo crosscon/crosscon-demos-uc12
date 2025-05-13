@@ -30,7 +30,7 @@ dd if=/dev/zero of=$IMAGE bs=1M count=256
 
 echo "# Associating the image with loop device"
 losetup -fP $IMAGE
-LOOP_DEV=$(losetup -j $IMAGE | cut -d: -f1)
+LOOP_DEV=$(losetup --show -fP $IMAGE)
 echo "# Loop device is $LOOP_DEV"
 
 echo "# Partitioning the image"
@@ -56,11 +56,6 @@ mkdir -p $MOUNT_DIR
 
 echo "# Mounting the partition at $MOUNT_DIR"
 mount "${LOOP_DEV}p1" $MOUNT_DIR
-
-cd rpi4-ws
-pushd ..
-
-echo "CR: $CONFIG_REPO "
 
 echo "# Cleaning hypervisor"
 sudo -u "$SUDO_USER" env PATH=$C_PATH make -C CROSSCON-Hypervisor/ \
