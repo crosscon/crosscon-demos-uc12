@@ -4,7 +4,6 @@ IMAGE=crosscon-demo-img.img
 MOUNT_DIR=/media/root/boot
 ROOT=$(git -C "$(dirname "$(realpath $0)")" rev-parse --show-toplevel)
 CONFIG_REPO="$ROOT/rpi4-ws/configs"
-NON_ROOT_USR=user
 C_PATH="/work/gcc-arm-11.2-2022.02-x86_64-aarch64-none-elf/bin:/work/gcc-arm-11.2-2022.02-x86_64-aarch64-none-linux-gnu/bin:$PATH"
 
 # Function to clean up if script fails
@@ -26,7 +25,7 @@ cd $ROOT
 set -e
 
 echo "# Creating empty image"
-dd if=/dev/zero of=$IMAGE bs=1M count=256
+sudo -u "$SUDO_USER" dd if=/dev/zero of="$IMAGE" bs=1M count=256
 
 echo "# Associating the image with loop device"
 LOOP_DEV=$(losetup --show -fP $IMAGE)
