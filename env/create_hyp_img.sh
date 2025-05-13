@@ -29,7 +29,6 @@ echo "# Creating empty image"
 dd if=/dev/zero of=$IMAGE bs=1M count=256
 
 echo "# Associating the image with loop device"
-losetup -fP $IMAGE
 LOOP_DEV=$(losetup --show -fP $IMAGE)
 echo "# Loop device is $LOOP_DEV"
 
