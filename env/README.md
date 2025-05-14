@@ -5,183 +5,92 @@
 The purpose of this repo is to provide the environment required for
 compilation of the CROSSCON hypervisor.
 
-## How to build the container
+## Clone the repository
 
-Run this command from top of the repository:
+Clone the repository by executing following command.
+
+```bash
+git clone --recurse-submodules git@github.com:3mdeb/CROSSCON-Hypervisor-and-TEE-Isolation-Demos.git crosscon-demos && \
+cd crosscon-demos
+```
+
+## Build & run the container
+
+Build docker container.
 
 ```bash
 docker build -t crosscon_hv -f env/Dockerfile .
 ```
 
-to build the docker image. The resulting image will have a `crosscon_hv` tag.
-After the image has been built, a container can be created and started directly
-by running this command:
+The resulting image will have a `crosscon_hv` tag.
+After the image has been built, execute `env/run.sh` script to run
+the container.
 
 ```bash
-docker run -d --name crosscon_hv_container crosscon_hv tail -f /dev/null
+env/run.sh
 ```
-
-> This step also is dependant on how you want to Flash the SD card later. All
-approaches are specified [below](#Copying-the-files-to-the-SD-card.).
-
-Then, to enter the shell of the running container, this command can be used:
-
-```bash
-docker exec -it crosscon_hv_container /bin/bash
-```
-
-> Note: If at any point when rebuilding/rerunning the container, error messages
-> similar to this one pop up:
->
-> ```bash
-> docker: Error response from daemon: Conflict. The container name
-> "/crosscon_hv_container" is already in use by container
-> "d6ee75901fd0e090147d242c485651ebf5c4fc58e13d8363725a6cab830a9ba0". You have to
-> remove (or rename) that container to be able to reuse that name.
-> See 'docker run --help'.
-> ```
->
-> This command should be used:
->
-> ```bash
-> docker rm --force <hash_of_the_container_from_the_error_message>
-> ```
->
-> Alternatively:
->
-> ```bash
-> docker rm --force crosscon_hv_container
-> ```
 
 ## Building the rpi4-ws demo
 
-This section contains instructions on how to build and flash the rpi4-ws demo.
-After attaching to the container, it should look like this:
+Inside the container, use below script to build the demo `rpi4-ws` package.
 
 ```bash
-user in ~/CROSSCON-Hypervisor-and-TEE-Isolation-Demos/env λ docker exec -it crosscon_hv_container /bin/bash
-root@d6ee75901fd0:/work#
+env/build_rpi4.sh --all
 ```
 
-Then `cd crosscon` should be ran, and the instructions from
-[the README](../rpi4-ws/README.md) followed.
-
-This will allow the binaries to be built, since the container has all the
-necessary dependencies.
-
-## Copying the files to the SD card.
-
-Obviously, the container allows the binaries to be built without worrying about
-dependencies. But in the end they have to end up on the SD card in order to
-boot the demo.
-
-### Running the container as privileged
-
-You can pass all your devices to the container and use the
-[Prepare SDCard](https://github.com/3mdeb/CROSSCON-Hypervisor-and-TEE-Isolation-Demos/tree/master/rpi4-ws#prepare-sdcard)
-instructions directly from inside of it using the `--privileged` flag or more restrictively pass only the
-single SD card.
+The script steps follow exactly what can be found in
+[the README](../rpi4-ws/README.md) on how to build the demo. This command will
+perform all steps. Run the command without any parameters to see other options.
 
 ```bash
-docker run -d --name crosscon_hv_container_copy --privileged crosscon_hv_copy tail -f /dev/null
+env/build_rpi4.sh
 ```
+
+## Creating and flashing the image
+
+The following command can be used to build the hypervisor and create an image
+with all required files included.
 
 ```bash
-docker run -d --name crosscon_hv_container_copy --device=/dev/sdX:/dev/sdX crosscon_hv_copy tail -f /dev/null
+sudo env/create_hyp_img.sh
 ```
 
-### Unprivileged container
+The command will output the image to `/work/crosscon/crosscon-demo-img.img`.
+Note: The command must be run with `sudo`.
 
-#### Firmware and bootloader files
-
-> Note: Before running the following commands, ensure that the SD card is
-> inserted into the host machine and that it is mounted.
-> (adjust the commands in this README to fit your SD card mount point).
-
-These commands can be ran to copy over the firmware to the SD card (this
-syntax assumes they are being copied directly from the container to the SD
-card):
+The built image can be then flashed to SD card.
 
 ```bash
-sudo docker cp crosscon_hv_container:/work/crosscon/rpi4-ws/firmware/boot/ $SDCARD_MOUNT/
-sudo docker cp crosscon_hv_container:/work/crosscon/rpi4-ws/config.txt $SDCARD_MOUNT/
-sudo docker cp crosscon_hv_container:/work/crosscon/rpi4-ws/bin/bl31.bin $SDCARD_MOUNT/
-sudo docker cp crosscon_hv_container:/work/crosscon/rpi4-ws/bin/u-boot.bin $SDCARD_MOUNT/
+sudo dd if=./crosscon-demo-img.img of=<drive> bs=4M conv=fsync
 ```
 
-#### Linux and Device Tree Image
+## Running the image
 
-After the Linux kernel has been build and lloader has been used to produce
-`linux-rpi4.bin`, that file will need to be copied out of the container and onto
-the SD card:
+Use UART to USB adapter to connect RPI to your machine and start up minicom.
 
 ```bash
-docker cp crosscon_hv_container:/work/crosscon/lloader/linux-rpi4.bin $SDCARD_MOUNT/
+minicom -D /dev/ttyUSB0 -b 115200
 ```
 
-#### Copying the CROSSCON Hypervisor Binary
-
-Building and copying of the hypervisor binary is done in the same script,
-either `build-demo-vtee.sh` or `build-demo-dual-vtee.sh`. By looking at the
-content of those scripts, it can be determined that they build the
-`crossconhyp.bin` files, then copies `start*` firmware files and
-`crossconhyp.bin` to the SD card mount point.
-
-> Note: this readme only covers the `build-demo-vtee.sh` script, since
-> the idea of what is being here is understood, it becomes easy to think
-> of the commands to achieve what goes on in the `dual` version of the script.
-
-The hypervisor will have to be built manually, then copied over to the host.
-Once the end of the [the README](../rpi4-ws/README.md) demo has been reached,
-instead of just running the script:
+Supply power to RPI and hit any key when asked to stop u-boot from attempting
+auto-boot.
 
 ```bash
-./build-demo-vtee.sh
+[...]
+scanning bus xhci_pci for devices... 2 USB Device(s) found
+       scanning usb for storage devices... 0 Storage Device(s) found
+Hit any key to stop autoboot:  0
+U-Boot>
 ```
 
-those files will have to be built manually:
+_Note: If you missed the timeframe, you can spam CTRL+C many times to achieve
+same result._
+
+Boot the image by manually loading it into the memory and "jumping" to it.
 
 ```bash
-CONFIG_REPO=`pwd`/configs
-
-pushd ..
-
-make -C CROSSCON-Hypervisor/ \
-	PLATFORM=rpi4 \
-	CONFIG_BUILTIN=y \
-	CONFIG_REPO=$CONFIG_REPO \
-	CONFIG=rpi4-single-vTEE \
-	OPTIMIZATIONS=0 \
-        SDEES="sdSGX sdTZ" \
-	CROSS_COMPILE=aarch64-none-elf- \
-        clean
-
-make -C CROSSCON-Hypervisor/ \
-	PLATFORM=rpi4 \
-	CONFIG_BUILTIN=y \
-	CONFIG_REPO=$CONFIG_REPO \
-	CONFIG=rpi4-single-vTEE \
-	OPTIMIZATIONS=0 \
-        SDEES="sdSGX sdTZ" \
-	CROSS_COMPILE=aarch64-none-elf- \
-        -j`nproc`
+fatload mmc 0 0x200000 crossconhyp.bin; go 0x200000
 ```
-
-Then confirm that the hypervisor got built correctly, and that the firmware
-files exist:
-
-```bash
-ls /work/crosscon/rpi4-ws/bin/
-ls /work/crosscon/CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-single-vTEE/
-```
-
-Then finally those files can be copied over to host:
-
-```bash
-sudo docker cp crosscon_hv_container:/work/crosscon/rpi4-ws/firmware/boot/start* $SDCARD_MOUNT/
-sudo docker cp crosscon_hv_container:/work/crosscon/CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-single-vTEE/crossconhyp.bin $SDCARD_MOUNT/
-```
-
 
 ## QEMU build
 

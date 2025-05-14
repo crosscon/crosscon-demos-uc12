@@ -4,6 +4,7 @@ FROM debian:12.8
 # Set environment variables
 ENV MAKE_VERSION=4.2.1
 ENV WORKDIR_PATH=/work
+ENV USERNAME=user
 
 # Set working directory
 WORKDIR $WORKDIR_PATH
@@ -44,8 +45,14 @@ RUN apt-get update && \
     binutils-riscv64-linux-gnu \
     libncurses-dev \
     fdisk \
-    dosfstools
-
+    dosfstools \
+    libglib2.0-dev \
+    python3-distutils \
+    libpixman-1-dev \
+    parted \
+    udev \
+    sudo \
+    vim
 
 # Install Make 4.2.1
 RUN wget http://ftp.pl.debian.org/debian/pool/main/m/make-dfsg/make_4.2.1-1.2_amd64.deb \
@@ -110,13 +117,8 @@ RUN wget http://ftp.pl.debian.org/debian/pool/main/n/ninja-build/ninja-build_1.1
 RUN apt install bash -y
 SHELL ["/bin/bash", "-c"]
 
-COPY env/files/.gitmodules $WORKDIR_PATH/crosscon/.gitmodules
-
 # Fix missing "cryptography" python module
 RUN apt install python3-cryptography -y
-
-# copy script for rpi4-ws demo
-COPY env/files/build.sh $WORKDIR_PATH/
 
 # Install Arm Bare-metal toolchain
 RUN wget -O aarch64-none-elf.tar.xz "https://developer.arm.com/-/media/Files/downloads/gnu/11.2-2022.02/binrel/gcc-arm-11.2-2022.02-x86_64-aarch64-none-elf.tar.xz?rev=981d8f7e91864070a466d852589598e2&hash=8D5397D4E41C99A96989ED813E8E95F0" \
@@ -135,15 +137,6 @@ RUN wget -O aarch64-none-linux-gnu.tar.xz "https://developer.arm.com/-/media/Fil
 ENV PATH="$WORKDIR_PATH/gcc-arm-11.2-2022.02-x86_64-aarch64-none-elf/bin:$PATH"
 ENV PATH="$WORKDIR_PATH/gcc-arm-11.2-2022.02-x86_64-aarch64-none-linux-gnu/bin:$PATH"
 
-# Setup CROSSCON repository
-COPY ./ $WORKDIR_PATH/crosscon
-
-COPY env/files/.gitmodules $WORKDIR_PATH/crosscon/.gitmodules
-
-RUN cd $WORKDIR_PATH/crosscon && \
-    git submodule init && \
-    git submodule update --depth 1
-
 # Add support for aarch64 packages
 RUN dpkg --add-architecture arm64
 
@@ -157,6 +150,15 @@ RUN echo "deb http://deb.debian.org/debian trixie main" >> /etc/apt/sources.list
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Make the starting directory is the CROSSCON Demos directory
+# Add non-root user and give sudo privileges
+RUN useradd -m -s /bin/bash $USERNAME && \
+    echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+USER $USERNAME
+
+# SHELL must be set after USER if you're switching to bash
+SHELL ["/bin/bash", "-c"]
+
+    # Make the starting directory is the CROSSCON Demos directory
 WORKDIR $WORKDIR_PATH/crosscon
 ENV ROOT=$WORKDIR_PATH/crosscon
