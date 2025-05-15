@@ -73,7 +73,7 @@ struct vm_config linux = {
                 .va = 0x7d580000, // Virtual address for the VM
                 .size = 0x10000,  // Size of the device memory region
                 .interrupt_num = 4,
-                .interrupts = (irqid_t[]) {0, 4, 157, 158} // Interrupts for the network device
+                .interrupts = (irqid_t[]) {157, 158} // Interrupts for the network device
             },
             {
                 /* Arch timer interrupt */
