@@ -72,7 +72,7 @@ struct vm_config linux = {
                 .pa = 0x7d580000, // Physical address of the genet device
                 .va = 0x7d580000, // Virtual address for the VM
                 .size = 0x10000,  // Size of the device memory region
-                .interrupt_num = 4,
+                .interrupt_num = 2,
                 .interrupts = (irqid_t[]) {157, 158} // Interrupts for the network device
             },
             {
