@@ -67,8 +67,9 @@ time, but it'll also increase time it takes to report changes.
 
 ## Results
 
-Example results, acquired on RPI4. Commands used are exactly the same as in
-[Run](#run) section.
+Example results, acquired on RPI4 on commit
+[8f58f780623c](https://github.com/3mdeb/CROSSCON-Hypervisor-and-TEE-Isolation-Demos/commit/8f58f780623c8691c5b8e9f7a434d02cb9b4f13c).
+Commands used are exactly the same as in [Run](#run) section.
 
 ### Without cache coloring
 
