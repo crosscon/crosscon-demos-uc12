@@ -41,16 +41,11 @@ uint8_t dummy_value;
 
 /** Parse params and save them to 'params' global struct */
 int parse_params(int argc, char **argv);
-/**
- * Prepare program, open file descriptors, mmap them and save them in 'data'
- * global struct
- */
+/** Prepare program, initialize libflush library */
 int prepare();
-/** Close file descriptors, free allocated memory, etc. */
+/** Cleanup everything prepared in prepare() */
 void cleanup();
-/**
- * Writes random byte to <addr, addr+size> each LINE_LENGTH bytes
- */
+/** Writes random byte to <addr, addr+size> each LINE_LENGTH bytes */
 void access_range(volatile uint8_t *addr, size_t size);
 /**
  * Access all cache lines in params.cache_lines and return how long it took.
@@ -84,9 +79,12 @@ int main(int argc, char **argv) {
 
     volatile uint8_t *vm_mem;
     if (params.op == EVICT) {
+        // allocate LLC_SIZE bytes. Reading all of it should put our data into
+        // all/most of cache lines in cache
         vm_mem = malloc(LLC_SIZE);
     }
     else {
+        // allocate enough memory to access highest index passed to program
         size_t max_line = max_st(params.cache_lines, params.count);
         size_t malloc_size = (max_line + 1)*LINE_LENGTH;
         vm_mem = malloc(malloc_size);
@@ -158,7 +156,7 @@ int parse_params(int argc, char **argv) {
         return -1;
     }
     params.count = argc - 2;
-	params.cache_lines = malloc((params.count) * sizeof(size_t));
+    params.cache_lines = malloc((params.count) * sizeof(size_t));
     for (int i = 0; i < params.count; ++i) {
         params.cache_lines[i] = strtoul(argv[i + 2], NULL, 10);
     }
@@ -169,8 +167,8 @@ int parse_params(int argc, char **argv) {
 int prepare() {
     printf("Libflush init\n");
     if (libflush_init(&libflush_session, NULL) == false) {
-		return -1;
-	}
+        return -1;
+    }
 
     return 0;
 }
@@ -178,8 +176,8 @@ int prepare() {
 void cleanup() {
     free(params.cache_lines);
     if (libflush_terminate(libflush_session) == false) {
-		fprintf(stderr, "libflush_terminate failed\n");
-	}
+        fprintf(stderr, "libflush_terminate failed\n");
+    }
 }
 
 void access_range(volatile uint8_t *addr, size_t size) {
@@ -209,9 +207,9 @@ void push(void *arr, size_t count, size_t el_size, void *element) {
 
 int cmp_uint64(const void* a, const void* b)
 {
-	uint64_t arg1 = *(const uint64_t*)a;
-	uint64_t arg2 = *(const uint64_t*)b;
-	return (arg1 > arg2) - (arg1 < arg2);
+    uint64_t arg1 = *(const uint64_t*)a;
+    uint64_t arg2 = *(const uint64_t*)b;
+    return (arg1 > arg2) - (arg1 < arg2);
 }
 
 uint64_t add_element_get_median(uint64_t *timings, uint64_t new_time) {
