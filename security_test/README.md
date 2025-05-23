@@ -32,6 +32,19 @@ Additional configuration:
 
 ## Run
 
+`cache_test` works in 2 modes
+
+* `time` in which it times how long it took to access memory addresses passed as
+  arguments. Each index should map to different cache line (as long as number is
+  smaller than number of cache lines e.g. 16384 for rpi4).
+  `cache_test time 0 1 2` would measure time it took to access
+  `addr`, `addr+64`, `addr+128` where `addr` is memory allocated by `cache_test`
+  program.
+* `evict` in which program accesses enough addresses to make sure all cache
+  lines in cache were replaced by its own data. Accepts no arguments.
+
+To run test:
+
 1. In VM 1 run
 
     ```sh
