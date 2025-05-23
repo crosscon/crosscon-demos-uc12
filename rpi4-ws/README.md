@@ -607,7 +607,7 @@ xtest2 -t regression
     ```
 
     And copy
-    `CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-single-vTEE/crossconhyp.bin`
+    `CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-minimal-2/crossconhyp.bin`
     to SD card.
 
 * Connect second UART to RPI4. Board configuration:
