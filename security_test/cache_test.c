@@ -158,7 +158,7 @@ int parse_params(int argc, char **argv) {
     params.count = argc - 2;
     params.cache_lines = malloc((params.count) * sizeof(size_t));
     for (int i = 0; i < params.count; ++i) {
-        params.cache_lines[i] = strtoul(argv[i + 2], NULL, 10);
+        params.cache_lines[i] = (size_t)strtoul(argv[i + 2], NULL, 10);
     }
 
     return 0;
