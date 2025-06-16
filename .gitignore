@@ -57,12 +57,14 @@ dkms.conf
 *to_buildroot*
 *out*
 *build*/
+buildroot-*.gz
 *.S
 
 # Build specific files
 rpi4-ws/arm-trusted-firmware/
 rpi4-ws/firmware/
 rpi4-ws/u-boot/
+memory-separation/link.ld
 
 
 # don't ignore scripts
