@@ -69,3 +69,6 @@ memory-separation/link.ld
 
 # don't ignore scripts
 !*.sh
+
+# binary
+malicous_ta/host/malicious_ca
