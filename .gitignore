@@ -59,6 +59,7 @@ dkms.conf
 *build*/
 buildroot-*.gz
 *.S
+!memory-separation/boot.S
 
 # Build specific files
 rpi4-ws/arm-trusted-firmware/
