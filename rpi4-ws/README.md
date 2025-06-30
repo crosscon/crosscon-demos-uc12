@@ -621,18 +621,23 @@ xtest2 -t regression
 
 ### Memory separation test
 
+* Follow
+  [README.md](/env/README.md)
+  up to [Creating and flashing the
+  image](/env/README.md#creating-and-flashing-the-image)
 * Build baremetal app:
 
     ```sh
     ./build-demo-baremetal.sh
     ```
 
-    And copy
-    `CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-baremetal/crossconhyp.bin`
-    to the SD card.
+* Mount boot partition that was flashed to SD card and replace `crossconhyp.bin`
+  with one found under
+  `CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-baremetal/crossconhyp.bin`
 
-* Follow [Setup board](#setup-board) section
-* Run hypervisor `fatload mmc 0 0x200000 crossconhyp.bin; go 0x200000`
+* Follow [Running the
+  image](/env/README.md#running-the-image)
+  section
 * After a while you should boot into baremetal app. You can pass memory address
   in hexadecimal (with or without `0x` prefix) and app will try to read this
   address e.g.:
