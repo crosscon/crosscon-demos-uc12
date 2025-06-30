@@ -618,3 +618,44 @@ xtest2 -t regression
   `ttyUSB1`
 
 * Follow `Run` section in [security test README](../security_test/README.md#run)
+
+### Memory separation test
+
+* Follow
+  [README.md](/env/README.md)
+  up to [Creating and flashing the
+  image](/env/README.md#creating-and-flashing-the-image)
+* Build baremetal app:
+
+    ```sh
+    ./build-demo-baremetal.sh
+    ```
+
+* Mount boot partition that was flashed to SD card and replace `crossconhyp.bin`
+  with one found under
+  `CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-baremetal/crossconhyp.bin`
+
+* Follow [Running the
+  image](/env/README.md#running-the-image)
+  section
+* After a while you should boot into baremetal app. You can pass memory address
+  in hexadecimal (with or without `0x` prefix) and app will try to read this
+  address e.g.:
+
+    ```txt
+    Access (hex): 0x20000000
+    Trying to access: 0x20000000
+    Value: 0xff
+    ```
+
+    When trying to access ranges outside of memory assigned to baremetal app you
+    should see data abort errors and VM will freeze
+
+    ```txt
+    CROSSCONHYP DATA ABORT: 0x1fffffff
+    ```
+
+    Second VM is just there to check if we can't access its memory, but you can
+    connect second UART ([GPIO 4](https://pinout.xyz/pinout/pin7_gpio4) & [GPIO
+    5](https://pinout.xyz/pinout/pin29_gpio5)) if you need to communicate with
+    it.
