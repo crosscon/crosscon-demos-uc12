@@ -8,9 +8,9 @@ STEP_4_NAME="4: Build OP-TEE xtest"
 STEP_5_NAME="5: Compile Bitcoin wallet UA an TA"
 STEP_6_NAME="6: Compile Malicious UA and TA"
 STEP_7_NAME="7: Compile Cache Coloring tests"
-STEP_7_NAME="8: Finalize Linux file system"
-STEP_8_NAME="9: Build linux"
-STEP_9_NAME="10: Bind Linux image and device tree"
+STEP_8_NAME="8: Finalize Linux file system"
+STEP_9_NAME="9: Build linux"
+STEP_10_NAME="10: Bind Linux image and device tree"
 
 ROOT=$(git -C "$(dirname "$(realpath $0)")" rev-parse --show-toplevel)
 
@@ -466,7 +466,7 @@ done
 # Parse params
 if [ "$RUN_ALL" = true ]; then
   STEP_START=0
-  STEP_END=9
+  STEP_END=10
 elif [[ "$STEP_RANGE" =~ ^([0-9]+)-([0-9]+)$ ]]; then
   STEP_START=${BASH_REMATCH[1]}
   STEP_END=${BASH_REMATCH[2]}
