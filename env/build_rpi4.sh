@@ -180,12 +180,6 @@ step_1() {
 step_2() {
     cd "$ROOT"
 
-    if [ ! -e buildroot ]; then
-        wget https://buildroot.org/downloads/buildroot-2022.11.1.tar.gz
-        tar -xf buildroot-2022.11.1.tar.gz
-        mv buildroot-2022.11.1 buildroot
-    fi
-
     mkdir -p buildroot/build-aarch64
 
     cp $BUILDROOT_CONF_PATH buildroot/build-aarch64/.config
