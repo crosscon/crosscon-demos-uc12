@@ -19,6 +19,7 @@ STEP_RANGE=""
 
 BUILDROOT_CONF_PATH="support/br-aarch64.config"
 LINUX_CONF_PATH="support/linux-aarch64.config"
+DTS_FILE="rpi4-ws/rpi4.dts"
 
 print_usage() {
   echo "Available steps:"
@@ -31,7 +32,7 @@ print_usage() {
   echo "Usage:"
   echo "  $0 --all - execute all steps."
   echo "  $0 --steps=X-Y - execute steps from X to Y (inclusive)."
-  echo "  [--buildroot_conf=PATH] [--linux_conf=PATH] - if not provided, defaults will be used."
+  echo "  [--buildroot_conf=PATH] [--linux_conf=PATH] [--dts=PATH] - if not provided, defaults will be used."
   exit 1
 }
 
@@ -418,7 +419,7 @@ step_9() {
 step_10() {
     cd "$ROOT"
 
-    dtc -I dts -O dtb rpi4-ws/rpi4.dts > rpi4-ws/rpi4.dtb
+    dtc -I dts -O dtb $DTS_FILE > rpi4-ws/rpi4.dtb
     cd lloader
 
     rm -f linux-rpi4.bin
@@ -449,6 +450,9 @@ for arg in "$@"; do
       ;;
     --linux_conf=*)
       LINUX_CONF_PATH="${arg#*=}"
+      ;;
+    --dts=*)
+      DTS_FILE="${arg#*=}"
       ;;
     *)
       echo "Unknown argument: $arg"
