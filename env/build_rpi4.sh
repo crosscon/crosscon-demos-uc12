@@ -375,6 +375,7 @@ step_6() {
 step_7() {
     cd "$ROOT/security_test"
 
+    OLD_CFLAGS=$CFLAGS
     BUILDROOT=$ROOT/buildroot/build-aarch64
     export CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
     export DESTDIR=./to_buildroot-aarch64
@@ -388,6 +389,8 @@ step_7() {
     cp "files/${DEVICE_CONFIGURATION}.h" armageddon/libflush/libflush/eviction/strategies/
     make clean || true
     make -j"$(nproc)"
+
+    export CFLAGS=$OLD_CFLAGS
 }
 
 step_8() {
