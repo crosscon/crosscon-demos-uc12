@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Note, the steps more or less follow legacy readme manual for building demos.
 STEP_0_NAME="Setup: set up FW components"
 STEP_1_NAME="1: Build OP-TEE OS"
 STEP_2_NAME="2: Build Linux file system (buildroot)"
@@ -20,6 +21,7 @@ STEP_RANGE=""
 BUILDROOT_CONF_PATH="support/br-aarch64.config"
 LINUX_CONF_PATH="support/linux-aarch64.config"
 DTS_FILE="rpi4-ws/rpi4.dts"
+LINUX_TARGET="linux-rpi4"
 
 print_usage() {
   echo "Available steps:"
@@ -32,7 +34,7 @@ print_usage() {
   echo "Usage:"
   echo "  $0 --all - execute all steps."
   echo "  $0 --steps=X-Y - execute steps from X to Y (inclusive)."
-  echo "  [--buildroot_conf=PATH] [--linux_conf=PATH] [--dts=PATH] - if not provided, defaults will be used."
+  echo "  [--buildroot_conf=PATH] [--linux_conf=PATH] [--dts=PATH] [--linux-target=NAME] - if not provided, defaults will be used."
   exit 1
 }
 
@@ -59,6 +61,16 @@ extra_step_1() {
     mkdir -p "${BUILDROOT_PATH}" "${BUILDROOT_PATH_2}"
     cp $TA_FILE_PATH $BUILDROOT_PATH
     cp $TA_FILE_PATH $BUILDROOT_PATH_2
+
+    cd "$ROOT"
+}
+
+# Build memory separation app
+extra_step_2() {
+    cd "$ROOT/memory-separation"
+
+    make clean
+    make CROSS_COMPILE=aarch64-none-elf- CONFIG_TEXT_BASE=0x20200000
 
     cd "$ROOT"
 }
@@ -187,6 +199,8 @@ step_2() {
 
     cd buildroot
 
+    # Build an incomplete filesystem to benefit fom buildroot building the
+    # appropriate linux toolchain.
     make O=build-aarch64/ -j`nproc` ||  echo "Building buildroot failed as expected!"
 
     cd $ROOT
@@ -425,14 +439,19 @@ step_10() {
     dtc -I dts -O dtb $DTS_FILE > rpi4-ws/rpi4.dtb
     cd lloader
 
-    rm -f linux-rpi4.bin
-    rm -f linux-rpi4.elf
+    rm -f "$LINUX_TARGET.bin"
+    rm -f "$LINUX_TARGET.elf"
     make  \
         IMAGE=../linux/build-aarch64/arch/arm64/boot/Image \
         DTB=../rpi4-ws/rpi4.dtb \
-        TARGET=linux-rpi4.bin \
+        TARGET=$LINUX_TARGET.bin \
         CROSS_COMPILE=aarch64-none-elf- \
         ARCH=aarch64
+
+    cd $ROOT
+
+    # Build memory separation app
+    extra_step_2
 
     cd $ROOT
 }
@@ -456,6 +475,9 @@ for arg in "$@"; do
       ;;
     --dts=*)
       DTS_FILE="${arg#*=}"
+      ;;
+    --linux-target=*)
+      LINUX_TARGET="${arg#*=}"
       ;;
     *)
       echo "Unknown argument: $arg"

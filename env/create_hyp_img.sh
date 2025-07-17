@@ -1,6 +1,7 @@
 #!/bin/bash
 
 IMAGE=crosscon-demo-img.img
+IMAGE_SIZE=512
 MOUNT_DIR=/media/root/boot
 ROOT=$(git -C "$(dirname "$(realpath $0)")" rev-parse --show-toplevel)
 CONFIG_REPO="$ROOT/rpi4-ws/configs"
@@ -14,6 +15,30 @@ cleanup() {
     losetup -d "$LOOP_DEV" 2>/dev/null || true
     echo "# Cleaning up, exiting..."
     exit 1
+}
+
+# Patch hypervisor
+patch() {
+    local CONFIG_REPO="$ROOT/rpi4-ws/configs"
+
+    cd "$ROOT/CROSSCON-Hypervisor"
+
+    # Check if patch is applied: https://stackoverflow.com/a/66755317
+    set +e
+    git apply --check "$ROOT/rpi4-ws/patches/0001-armv8-aborts.c-add-printk-to-aborts_data_lower.patch" 2>/dev/null
+    git_check_apply=$?
+    git apply --reverse --check "$ROOT/rpi4-ws/patches/0001-armv8-aborts.c-add-printk-to-aborts_data_lower.patch" 2>/dev/null
+    git_check_reverse_apply=$?
+    set -e
+
+    if [[ $git_check_apply -eq 0 && $git_check_reverse_apply -ne 0 ]]; then
+        git apply "$ROOT/rpi4-ws/patches/0001-armv8-aborts.c-add-printk-to-aborts_data_lower.patch"
+    elif [[ $git_check_apply -ne 0 && $git_check_reverse_apply -ne 0 ]]; then
+        echo "Can't apply patch"
+        exit 1
+    fi
+
+    cd "$ROOT"
 }
 
 
@@ -38,11 +63,15 @@ for arg in "$@"; do
     esac
 done
 
+# Patch hypervisor first
+echo "# Checking if hypervisor needs patching"
+patch
+
 # Change dir to root
 cd $ROOT
 
 echo "# Creating empty image"
-sudo -u "$SUDO_USER" dd if=/dev/zero of="$IMAGE" bs=1M count=256
+sudo -u "$SUDO_USER" dd if=/dev/zero of="$IMAGE" bs=1M count=$IMAGE_SIZE
 
 echo "# Associating the image with loop device"
 LOOP_DEV=$(losetup --show -fP $IMAGE)
@@ -100,9 +129,9 @@ cp -vr rpi4-ws/firmware/boot/* $MOUNT_DIR
 cp -v rpi4-ws/config.txt $MOUNT_DIR
 cp -v rpi4-ws/bin/bl31.bin $MOUNT_DIR
 cp -v rpi4-ws/bin/u-boot.bin $MOUNT_DIR
-cp -v lloader/linux-rpi4.bin $MOUNT_DIR
+cp -v lloader/linux*.bin $MOUNT_DIR
 cp -vr rpi4-ws/firmware/boot/start* $MOUNT_DIR
-cp -uv CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-single-vTEE/crossconhyp.bin $MOUNT_DIR
+cp -uv CROSSCON-Hypervisor/bin/rpi4/builtin-configs/$CONFIG_NAME/crossconhyp.bin $MOUNT_DIR
 
 echo "# Unmounting the image"
 umount $MOUNT_DIR
