@@ -17,15 +17,15 @@ cd crosscon-demos
 Build docker container.
 
 ```bash
-docker build -t crosscon_hv -f env/Dockerfile .
+docker build -t crosscon_hv -f rpi4-ws/Dockerfile .
 ```
 
 The resulting image will have a `crosscon_hv` tag.
-After the image has been built, execute `env/run.sh` script to run
+After the image has been built, execute `rpi4-ws/run.sh` script to run
 the container.
 
 ```bash
-env/run.sh
+rpi4-ws/run.sh
 ```
 
 ## Building the rpi4-ws demo
@@ -33,14 +33,14 @@ env/run.sh
 Inside the container, use below script to build the demo `rpi4-ws` package.
 
 ```bash
-env/build_rpi4.sh --all
+rpi4-ws/build.sh --all
 ```
 
 This command will perform all steps. Run the command without any parameters to
 see other options.
 
 ```bash
-env/build_rpi4.sh
+rpi4-ws/build.sh
 ```
 
 ## Creating and flashing the image
@@ -49,7 +49,7 @@ The following command can be used to build the hypervisor and create an image
 with all required files included.
 
 ```bash
-sudo env/create_hyp_img.sh
+sudo rpi4-ws/create_hyp_img.sh
 ```
 
 The command will output the image to `/work/crosscon/crosscon-demo-img.img`.
@@ -116,7 +116,7 @@ resulting in a configuration with a Linux VM and OP-TEE VM.
 This demo instantiates a Linux VM and two OP-TEE VMs.
 
 ```bash
-sudo env/create_hyp_img.sh --config=rpi4-dual-vTEE
+sudo rpi4-ws/create_hyp_img.sh --config=rpi4-dual-vTEE
 ```
 
 Flash contents as described in
@@ -136,9 +136,9 @@ xtest2 -t regression
 * Build security test demo:
 
   ```bash
-  env/build_rpi4.sh --steps=10-10 --linux-target=linux-rpi4 --dts=rpi4-ws/rpi4-minimal.dts && \
-  env/build_rpi4.sh --steps=10-10 --linux-target=linux2-rpi4 --dts=rpi4-ws/rpi4-minimal2.dts && \
-  sudo env/create_hyp_img.sh --config=rpi4-minimal-2
+  rpi4-ws/build.sh --steps=10-10 --linux-target=linux-rpi4 --dts=rpi4-ws/rpi4-minimal.dts && \
+  rpi4-ws/build.sh --steps=10-10 --linux-target=linux2-rpi4 --dts=rpi4-ws/rpi4-minimal2.dts && \
+  sudo rpi4-ws/create_hyp_img.sh --config=rpi4-minimal-2
   ```
 
 * Flash contents as described in
@@ -158,8 +158,8 @@ xtest2 -t regression
 * Build baremetal app:
 
   ```sh
-  env/build_rpi4.sh --steps=10-10 --linux-target=linux2-rpi4 --dts=rpi4-ws/rpi4-minimal2.dts && \
-  sudo env/create_hyp_img.sh --config=rpi4-baremetal
+  rpi4-ws/build.sh --steps=10-10 --linux-target=linux2-rpi4 --dts=rpi4-ws/rpi4-minimal2.dts && \
+  sudo rpi4-ws/create_hyp_img.sh --config=rpi4-baremetal
   ```
 * Flash contents as described in
 ["Creating and flashing the Image" section](#creating-and-flashing-the-image)

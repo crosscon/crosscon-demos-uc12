@@ -60,7 +60,7 @@ RUN wget http://ftp.pl.debian.org/debian/pool/main/m/make-dfsg/make_4.2.1-1.2_am
     && rm -f make_4.2.1-1.2_amd64.deb
 
 # Install dtc 1.6.1
-COPY env/patches/dtc $WORKDIR_PATH/patches/dtc/
+COPY rpi4-ws/patches/dtc $WORKDIR_PATH/patches/dtc/
 
 RUN git clone https://salsa.debian.org/crosstoolchain-team/device-tree-compiler.git \
     && cd device-tree-compiler \
@@ -94,7 +94,7 @@ RUN wget http://ftp.pl.debian.org/debian/pool/main/libj/libjsoncpp/libjsoncpp24_
     && rm -f libjsoncpp24_1.9.4-4_amd64.deb
 
 # Install Cmake 3.20.0
-COPY env/patches/cmake $WORKDIR_PATH/patches/cmake/
+COPY rpi4-ws/patches/cmake $WORKDIR_PATH/patches/cmake/
 
 RUN wget https://cmake.org/files/v3.20/cmake-3.20.0.tar.gz \
     && tar -xvf cmake-3.20.0.tar.gz \
