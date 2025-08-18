@@ -26,3 +26,9 @@
 [submodule "buildroot"]
 	path = buildroot
 	url = https://github.com/buildroot/buildroot.git
+[submodule "optee_os_cba"]
+	path = optee_os_cba
+	url = git@github.com:crosscon/context-based-auth-optee-os.git
+[submodule "cba_ta"]
+	path = cba_ta
+	url = git@github.com:crosscon/context-based-auth-trusted-application.git
