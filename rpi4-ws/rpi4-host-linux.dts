@@ -267,6 +267,11 @@
 				compatible = "linaro,optee-tz";
 				method = "smc";
 			};
+
+			optee2 {
+				compatible = "crosscon,optee2-tz";
+				method = "smc";
+			};
 		};
 
 		power {
