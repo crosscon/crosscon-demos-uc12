@@ -1,6 +1,6 @@
 #include <config.h>
 
-M_IMAGE(host_linux_image, "../lloader/linux-rpi4.bin");
+VM_IMAGE(host_linux_image, "../lloader/linux-rpi4.bin");
 VM_IMAGE(nexmon_image, "../nexmon/nexmon.bin");
 VM_IMAGE(optee_os_image, "../optee_os/optee-rpi4/core/tee-pager_v2.bin");
 VM_IMAGE(optee2_os_image, "../optee_os/optee2-rpi4/core/tee-pager_v2.bin");

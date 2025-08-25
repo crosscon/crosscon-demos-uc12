@@ -322,7 +322,7 @@ step_4() {
 
     export O=$(pwd)/out-cba-aarch64
     export DESTDIR=./to_buildroot-aarch64-cba
-    export TA_DEV_KIT_DIR=$(pwd)/../optee_os/optee-cba-rpi4/export-ta_arm64
+    export TA_DEV_KIT_DIR=$(pwd)/../optee_os_cba/optee-cba-rpi4/export-ta_arm64
     export TEEC_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
     export OPTEE_CLIENT_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
     rm -rf $(pwd)/out-cba-aarch64
@@ -470,7 +470,7 @@ step_7() {
     export ARCH=aarch64
     export PLATFORM=plat-vexpress
     export PLATFORM_FLAVOR=qemu_armv8a
-    export TA_DEV_KIT_DIR=$(pwd)/../optee_os/optee-cba-rpi4/export-ta_arm64
+    export TA_DEV_KIT_DIR=$(pwd)/../optee_os_cba/optee-cba-rpi4/export-ta_arm64
     export TEEC_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
     export OPTEE_CLIENT_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
     export CFG_TA_OPTEE_CORE_API_COMPAT_1_1=y
