@@ -1,9 +1,9 @@
 #include <config.h>
 
 VM_IMAGE(host_linux_image, "../lloader/linux-rpi4.bin");
-VM_IMAGE(nexmon_image, "../nexmon/nexmon.bin");
+//VM_IMAGE(nexmon_image, "../nexmon/nexmon.bin");
 VM_IMAGE(optee_os_image, "../optee_os/optee-rpi4/core/tee-pager_v2.bin");
-VM_IMAGE(optee2_os_image, "../optee_os/optee2-rpi4/core/tee-pager_v2.bin");
+//VM_IMAGE(optee2_os_image, "../optee_os/optee2-rpi4/core/tee-pager_v2.bin");
 
 /* Notes
 CPU CORE ASSIGNMENT: 1,1,2,2 (host/optee_os1/nexmon/optee_os2) -> bitmap 0x8, 0x4, 0x3, 0xf
@@ -16,7 +16,7 @@ Memory layout:
 */
 
 /* The VM with PKCS#11 TA */
-struct vm_config optee2_os = {
+/*struct vm_config optee2_os = {
     .image = {
         .base_addr = 0xb0100000,
         .load_addr = VM_IMAGE_OFFSET(optee2_os_image),
@@ -46,13 +46,13 @@ struct vm_config optee2_os = {
             }
         },
         .dev_num = 1,
-        .devs = (struct dev_region[]) {
+        .devs = (struct dev_region[]) {*/
 /*            {
                 .pa = 0xfe215000,
                 .va = 0xfe215000,
                 .size = 0x10000,
             },*/
-        },
+/*        },
         .arch = {
             .gic = {
                 .gicc_addr = 0x8010000,
@@ -61,7 +61,7 @@ struct vm_config optee2_os = {
             }
         }
     },
-};
+};*/
 
 
 // Linux VM configuration
@@ -76,8 +76,8 @@ struct vm_config host_linux = {
 
     .type = 0,
 
-    .children_num = 1,
-    .children = (struct vm_config*[]) { &optee2_os },
+//    .children_num = 1,
+//    .children = (struct vm_config*[]) { &optee_os },
 
     .platform = {
         .cpu_num = 1,
@@ -162,7 +162,7 @@ struct vm_config host_linux = {
     }
 };
 
-struct vm_config nexmon_linux = {
+/*struct vm_config nexmon_linux = {
     .image = {
         .base_addr = 0x20200000,
         .load_addr = VM_IMAGE_OFFSET(nexmon_image),
@@ -227,7 +227,7 @@ struct vm_config nexmon_linux = {
             }
         }
     }
-};
+};*/
 
 struct vm_config optee_os = {
     .image = {
@@ -263,12 +263,12 @@ struct vm_config optee_os = {
                 .base = 0x09000000,
                 .size = 0x00800000,
                 .shmem_id = 1,
-            },
+            }/*,
             {
                 .base = 0xc8200000,
                 .size = 0x00200000,
                 .shmem_id = 2,
-            }
+            }*/
         },
         .dev_num = 1,
         .devs = (struct dev_region[]) {
@@ -299,13 +299,13 @@ struct config config = {
     .shmemlist_size = 2,
     .shmemlist = (struct shmem[]) {
         [0] = { .size = 0x00200000, }, // OPTEE_OS 1 <-> Host
-        [1] = { .size = 0x00800000, }, // OPTEE_OS 1 <-> NEXMON
-        [2] = { .size = 0x00200000, }, // OPTEE_OS 2 <-> Host
+        [1] = { .size = 0x00800000, }//, // OPTEE_OS 1 <-> NEXMON
+/*        [2] = { .size = 0x00200000, }, // OPTEE_OS 2 <-> Host*/
     },
-    .vmlist_size = 2,
+    .vmlist_size = 1,
     .vmlist = {
-        &optee_os,
-        &nexmon_linux
+        &optee_os//,
+/*        &nexmon_linux*/
     }
 };
 
