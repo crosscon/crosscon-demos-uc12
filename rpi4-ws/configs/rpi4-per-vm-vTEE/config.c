@@ -1,7 +1,7 @@
 #include <config.h>
 
 VM_IMAGE(host_linux_image, "../lloader/linux-rpi4.bin");
-//VM_IMAGE(nexmon_image, "../nexmon/nexmon.bin");
+VM_IMAGE(nexmon_image, "../nexmon/nexmon.bin");
 VM_IMAGE(optee_os_image, "../optee_os/optee-rpi4/core/tee-pager_v2.bin");
 //VM_IMAGE(optee2_os_image, "../optee_os/optee2-rpi4/core/tee-pager_v2.bin");
 
@@ -159,7 +159,7 @@ struct vm_config host_linux = {
     }
 };
 
-/*struct vm_config nexmon_linux = {
+struct vm_config nexmon_linux = {
     .image = {
         .base_addr = 0x20200000,
         .load_addr = VM_IMAGE_OFFSET(nexmon_image),
@@ -224,7 +224,7 @@ struct vm_config host_linux = {
             }
         }
     }
-};*/
+};
 
 struct vm_config optee_os = {
     .image = {
@@ -295,16 +295,16 @@ struct vm_config optee_os = {
 struct config config = {
 
     CONFIG_HEADER
-    .shmemlist_size = 0,
+    .shmemlist_size = 2,
     .shmemlist = (struct shmem[]) {
         [0] = { .size = 0x00200000, }, // OPTEE_OS 1 <-> Host
         [1] = { .size = 0x00800000, }//, // OPTEE_OS 1 <-> NEXMON
 /*        [2] = { .size = 0x00200000, }, // OPTEE_OS 2 <-> Host*/
     },
-    .vmlist_size = 1,
+    .vmlist_size = 2,
     .vmlist = {
-        &optee_os//,
-/*        &nexmon_linux*/
+        &optee_os,
+        &nexmon_linux
     }
 };
 
