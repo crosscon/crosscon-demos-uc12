@@ -81,13 +81,13 @@ struct vm_config host_linux = {
         .region_num = 1,
         .regions =  (struct mem_region[]) {
             {
-                .base = 0x60200000,
+                .base = 0x60000000,
                 .size = 0x40000000,
                 .place_phys = true,
-                .phys = 0x60200000
+                .phys = 0x60000000
             }
         },
-        .ipc_num = 0,
+        .ipc_num = 2,
         .ipcs = (struct ipc[]) {
             {
                 .base = 0x08000000,
