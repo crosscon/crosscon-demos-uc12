@@ -202,9 +202,9 @@ step_1() {
     export CFLAGS=-Wno-cast-function-type
     PLATFORM="rpi4"
     ARCH="arm"
-    SHMEM_START="0xc8200000"
+    SHMEM_START="0x08000000"
     SHMEM_SIZE="0x00200000"
-    TZDRAM_START="0xb0100000"
+    TZDRAM_START="0x10100000"
     TZDRAM_SIZE="0x00F00000"
     CFG_GIC=n
 

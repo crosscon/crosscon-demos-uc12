@@ -2,7 +2,7 @@
 
 VM_IMAGE(host_linux_image, "../lloader/linux-rpi4.bin");
 VM_IMAGE(nexmon_image, "../nexmon/nexmon.bin");
-VM_IMAGE(optee_os_image, "../optee_os/optee-rpi4/core/tee-pager_v2.bin");
+VM_IMAGE(optee_os_image, "../optee_os_cba/optee-cba-rpi4/core/tee-pager_v2.bin");
 //VM_IMAGE(optee2_os_image, "../optee_os/optee2-rpi4/core/tee-pager_v2.bin");
 
 /* Notes
@@ -189,9 +189,9 @@ struct vm_config nexmon_linux = {
                 .shmem_id = 1,
             },
         },
-	.dev_num = 4,
+        .dev_num = 4,
         .devs = (struct dev_region[]) {
-		{
+                {
                         .pa   = 0xfc000000,
                         .va   = 0xfc000000,
                         .size = 0x03000000
@@ -240,8 +240,6 @@ struct vm_config optee_os = {
     .children_num = 1,
     .children = (struct vm_config*[]) { &host_linux },
 
-    .children_num = 1,
-    .children = (struct vm_config*[]) { &host_linux },
     .platform = {
         .cpu_num = 1,
         .region_num = 1,
@@ -249,6 +247,8 @@ struct vm_config optee_os = {
             {
                 .base = 0x10100000,
                 .size = 0x00F00000, // 15 MB
+                .place_phys = true,
+                .phys = 0x10100000
             }
         },
         .ipc_num = 2,
@@ -289,7 +289,7 @@ struct vm_config optee_os = {
                 .gicc_addr = 0xff842000,
             }
         }
-    }
+    },
 };
 
 struct config config = {
