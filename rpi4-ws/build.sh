@@ -156,8 +156,8 @@ step_1() {
 
     OPTEE_DIR="./"
     export O="$OPTEE_DIR/optee2-rpi4"
-    SHMEM_START="0x08200000"
-    TZDRAM_START="0x20100000"
+    SHMEM_START="0xc8200000"
+    TZDRAM_START="0xb0100000"
 
     rm -rf $O
 
