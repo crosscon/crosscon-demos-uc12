@@ -78,6 +78,9 @@ struct vm_config host_linux = {
 
     .type = 0,
 
+    .children_num = 1,
+    .children = (struct vm_config*[]) { &optee2_os },
+
     .platform = {
         .cpu_num = 1,
         .region_num = 1,
@@ -89,7 +92,7 @@ struct vm_config host_linux = {
                 .phys = 0x60000000
             }
         },
-        .ipc_num = 2,
+        .ipc_num = 3,
         .ipcs = (struct ipc[]) {
             {
                 .base = 0x08000000,
@@ -303,11 +306,10 @@ struct config config = {
         [1] = { .size = 0x00800000, }, // OPTEE_OS 1 <-> NEXMON
         [2] = { .size = 0x00200000, } // OPTEE_OS 2 <-> Host
     },
-    .vmlist_size = 3,
+    .vmlist_size = 2,
     .vmlist = {
         &optee_os,
-        &nexmon_linux,
-        &optee2_os
+        &nexmon_linux
     }
 };
 
