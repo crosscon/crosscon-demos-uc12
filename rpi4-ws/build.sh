@@ -17,10 +17,13 @@ STEP_11_NAME="11: Bind Linux image and device tree"
 ROOT=$(git -C "$(dirname "$(realpath $0)")" rev-parse --show-toplevel)
 
 RUN_ALL=false
+LOCAL_CONFS=false
 STEP_RANGE=""
 
 BUILDROOT_CONF_PATH="support/br-aarch64.config"
+BUILDROOT_LOCAL_CONF_PATH="buildroot/build-aarch64/.config"
 LINUX_CONF_PATH="support/linux-aarch64.config"
+LINUX_LOCAL_CONF_PATH="linux/build-aarch64/.config"
 DTS_FILE="rpi4-ws/rpi4.dts"
 LINUX_TARGET="linux-rpi4"
 BUILD_CBA="false"
@@ -35,6 +38,7 @@ print_usage() {
   echo
   echo "Usage:"
   echo "  $0 --all - execute all steps."
+  echo "  $0 --local-confs - use local .config files instead of copying reference ones."
   echo "  $0 --steps=X-Y - execute steps from X to Y (inclusive)."
   echo "  [--buildroot_conf=PATH] [--linux_conf=PATH] [--dts=PATH] [--linux-target=NAME] - if not provided, defaults will be used."
   exit 1
@@ -245,7 +249,9 @@ step_2() {
 
     mkdir -p buildroot/build-aarch64
 
-    cp $BUILDROOT_CONF_PATH buildroot/build-aarch64/.config
+    if [ "$LOCAL_CONFS" = "false" ]; then
+        cp $BUILDROOT_CONF_PATH $BUILDROOT_LOCAL_CONF_PATH
+    fi
 
     cd buildroot
 
@@ -536,7 +542,10 @@ step_10() {
     cd "$ROOT"
 
     mkdir -p linux/build-aarch64/
-    cp $LINUX_CONF_PATH linux/build-aarch64/.config
+
+    if [ "$LOCAL_CONFS" = "false" ]; then
+        cp $LINUX_CONF_PATH $LINUX_LOCAL_CONF_PATH
+    fi
 
     cd linux
 
@@ -576,6 +585,9 @@ for arg in "$@"; do
     --all)
       RUN_ALL=true
       ;;
+    --local-confs)
+      LOCAL_CONFS=true
+      ;;
     --steps=*)
       STEP_RANGE="${arg#*=}"
       ;;
@@ -610,8 +622,18 @@ else
 fi
 
 # Check for CBA:
-grep -q "optee_os_cba" "$BUILDROOT_CONF_PATH" && BUILD_CBA="true" || BUILD_CBA="false"
-grep -q "cba_ta" "$BUILDROOT_CONF_PATH" && BUILD_CBA="true" || BUILD_CBA="false"
+config_path=""
+if [ "${LOCAL_CONF:-}" = "true" ]; then
+    config_path="$BUILDROOT_LOCAL_CONF_PATH"
+else
+    config_path="$BUILDROOT_CONF_PATH"
+fi
+
+if grep -q "optee_os_cba" "$config_path" || grep -q "cba_ta" "$config_path"; then
+    BUILD_CBA="true"
+else
+    BUILD_CBA="false"
+fi
 
 # Run steps
 for ((i=STEP_START; i<=STEP_END; i++)); do
