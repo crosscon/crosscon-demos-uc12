@@ -9,6 +9,9 @@
 *.bin
 *.img
 
+# Exception for nexmon.bin
+!nexmon/nexmon.bin
+
 # Linker output
 *.ilk
 *.map

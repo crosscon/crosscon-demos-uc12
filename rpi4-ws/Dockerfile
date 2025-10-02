@@ -42,6 +42,7 @@ RUN apt-get update && \
     python3-pyelftools  \
     gcc-riscv64-linux-gnu \
     g++-riscv64-linux-gnu \
+    gcc-riscv64-unknown-elf \
     binutils-riscv64-linux-gnu \
     libncurses-dev \
     fdisk \
