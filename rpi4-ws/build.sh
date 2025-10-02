@@ -8,24 +8,29 @@ STEP_3_NAME="3: Build OP-TEE Clients"
 STEP_4_NAME="4: Build OP-TEE xtest"
 STEP_5_NAME="5: Compile Bitcoin wallet UA an TA"
 STEP_6_NAME="6: Compile Malicious UA and TA"
-STEP_7_NAME="7: Compile Cache Coloring tests"
-STEP_8_NAME="8: Finalize Linux file system"
-STEP_9_NAME="9: Build linux"
-STEP_10_NAME="10: Bind Linux image and device tree"
+STEP_7_NAME="7: Compile Context-Based Authentication TA"
+STEP_8_NAME="8: Compile Cache Coloring tests"
+STEP_9_NAME="9: Finalize Linux file system"
+STEP_10_NAME="10: Build linux"
+STEP_11_NAME="11: Bind Linux image and device tree"
 
 ROOT=$(git -C "$(dirname "$(realpath $0)")" rev-parse --show-toplevel)
 
 RUN_ALL=false
+LOCAL_CONFS=false
 STEP_RANGE=""
 
 BUILDROOT_CONF_PATH="support/br-aarch64.config"
+BUILDROOT_LOCAL_CONF_PATH="buildroot/build-aarch64/.config"
 LINUX_CONF_PATH="support/linux-aarch64.config"
+LINUX_LOCAL_CONF_PATH="linux/build-aarch64/.config"
 DTS_FILE="rpi4-ws/rpi4.dts"
 LINUX_TARGET="linux-rpi4"
+BUILD_CBA="false"
 
 print_usage() {
   echo "Available steps:"
-  for i in {0..10}; do
+  for i in {0..11}; do
     step_name_var="STEP_${i}_NAME"
     echo "  $i - ${!step_name_var}"
   done
@@ -33,6 +38,7 @@ print_usage() {
   echo
   echo "Usage:"
   echo "  $0 --all - execute all steps."
+  echo "  $0 --local-confs - use local .config files instead of copying reference ones."
   echo "  $0 --steps=X-Y - execute steps from X to Y (inclusive)."
   echo "  [--buildroot_conf=PATH] [--linux_conf=PATH] [--dts=PATH] [--linux-target=NAME] - if not provided, defaults will be used."
   exit 1
@@ -55,12 +61,13 @@ extra_step_1() {
     cd "$ROOT"
 
     TA_FILE_PATH=optee_os/optee-rpi4/export-ta_arm64/ta/fd02c9da-306c-48c7-a49c-bbd827ae86ee.ta
+    TA_FILE_PATH_2=optee_os/optee2-rpi4/export-ta_arm64/ta/fd02c9da-306c-48c7-a49c-bbd827ae86ee.ta
     BUILDROOT_PATH=buildroot/build-aarch64/target/lib/optee_armtz/
     BUILDROOT_PATH_2=buildroot/build-aarch64/target/lib/optee2_armtz/
 
     mkdir -p "${BUILDROOT_PATH}" "${BUILDROOT_PATH_2}"
     cp $TA_FILE_PATH $BUILDROOT_PATH
-    cp $TA_FILE_PATH $BUILDROOT_PATH_2
+    cp $TA_FILE_PATH_2 $BUILDROOT_PATH_2
 
     cd "$ROOT"
 }
@@ -153,8 +160,8 @@ step_1() {
 
     OPTEE_DIR="./"
     export O="$OPTEE_DIR/optee2-rpi4"
-    SHMEM_START="0x08200000"
-    TZDRAM_START="0x20100000"
+    SHMEM_START="0xc8200000"
+    TZDRAM_START="0xb0100000"
 
     rm -rf $O
 
@@ -188,6 +195,53 @@ step_1() {
 
 
     cd $ROOT
+
+    [ "$BUILD_CBA" == "false" ] && return
+
+    cd optee_os_cba
+
+    OPTEE_DIR="./"
+    export O="$OPTEE_DIR/optee-cba-rpi4"
+    CC="aarch64-none-elf-"
+    export CFLAGS=-Wno-cast-function-type
+    PLATFORM="rpi4"
+    ARCH="arm"
+    SHMEM_START="0x08000000"
+    SHMEM_SIZE="0x00200000"
+    TZDRAM_START="0x10100000"
+    TZDRAM_SIZE="0x00F00000"
+    CFG_GIC=n
+
+    rm -rf $O
+
+    make -C $OPTEE_DIR \
+        O=$O \
+        CROSS_COMPILE=$CC \
+        PLATFORM=$PLATFORM \
+        PLATFORM_FLAVOR=$PLATFORM_FLAVOR \
+        ARCH=$ARCH \
+        CFG_PKCS11_TA=y \
+        CFG_SHMEM_START=$SHMEM_START \
+        CFG_SHMEM_SIZE=$SHMEM_SIZE \
+        CFG_CORE_DYN_SHM=n \
+        CFG_NUM_THREADS=1 \
+        CFG_CORE_RESERVED_SHM=y \
+        CFG_CORE_ASYNC_NOTIF=n \
+        CFG_TZDRAM_SIZE=$TZDRAM_SIZE \
+        CFG_TZDRAM_START=$TZDRAM_START \
+        CFG_GIC=y \
+        CFG_ARM_GICV2=y \
+        CFG_CORE_IRQ_IS_NATIVE_INTR=n \
+        CFG_ARM64_core=y \
+        CFG_USER_TA_TARGETS=ta_arm64 \
+        CFG_DT=n \
+        CFG_CORE_ASLR=n \
+        CFG_CORE_WORKAROUND_SPECTRE_BP=n \
+        CFG_CORE_WORKAROUND_NSITR_CACHE_PRIME=n \
+        CFG_TEE_CORE_LOG_LEVEL=1 \
+        DEBUG=1 -j16
+
+    cd $ROOT
 }
 
 step_2() {
@@ -195,7 +249,9 @@ step_2() {
 
     mkdir -p buildroot/build-aarch64
 
-    cp $BUILDROOT_CONF_PATH buildroot/build-aarch64/.config
+    if [ "$LOCAL_CONFS" = "false" ]; then
+        cp $BUILDROOT_CONF_PATH $BUILDROOT_LOCAL_CONF_PATH
+    fi
 
     cd buildroot
 
@@ -267,6 +323,22 @@ step_4() {
     find . -name "Makefile" -exec sed -i "s/optee2_armtz/optee_armtz/g" {} +
 
     mv $DESTDIR/bin/xtest $DESTDIR/bin/xtest2
+
+    [ "$BUILD_CBA" == "false" ] && return
+
+    export O=$(pwd)/out-cba-aarch64
+    export DESTDIR=./to_buildroot-aarch64-cba
+    export TA_DEV_KIT_DIR=$(pwd)/../optee_os_cba/optee-cba-rpi4/export-ta_arm64
+    export TEEC_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
+    export OPTEE_CLIENT_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
+    rm -rf $(pwd)/out-cba-aarch64
+    find . -name "Makefile" -exec sed -i "s/\-lteec2$/\-lteec/g" {} +
+    find . -name "Makefile" -exec sed -i "s/\-lckteec2$/\-lckteec/g" {} +
+    find . -name "Makefile" -exec sed -i "s/optee2_armtz/optee_armtz/g" {} +
+    make clean
+    make -j`nproc`
+    make install
+
     cd $ROOT
 }
 
@@ -386,7 +458,53 @@ step_6() {
     cd $ROOT
 }
 
+# Build CBA UA and TA
+# (is similar to building any other TA)
+# DIFFERENCE: The `make install` step isn't available,
+# so all files must be copied to their respective locations manually!
 step_7() {
+    [ "$BUILD_CBA" == "false" ] && return
+
+    cd "$ROOT"
+
+    cd 'cba_ta'
+
+    BUILDROOT=$(pwd)/../buildroot/build-aarch64/
+    export CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
+    export HOST_CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
+    export TA_CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
+    export ARCH=aarch64
+    export PLATFORM=plat-vexpress
+    export PLATFORM_FLAVOR=qemu_armv8a
+    export TA_DEV_KIT_DIR=$(pwd)/../optee_os_cba/optee-cba-rpi4/export-ta_arm64
+    export TEEC_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
+    export OPTEE_CLIENT_EXPORT=$(pwd)/../optee_client/out-aarch64/export/usr/
+    export CFG_TA_OPTEE_CORE_API_COMPAT_1_1=y
+    export DESTDIR=./to_buildroot-aarch64-cba
+    export DEBUG=0
+    export CFG_TEE_TA_LOG_LEVEL=0
+    export CFLAGS=-O2
+    export O=$(pwd)/out-cba-aarch64
+    export CFG_PKCS11_TA=n
+
+    rm -rf $O
+    rm -rf to_buildroot-aarch64-cba/
+    find . -name "Makefile" -exec sed -i "s/\-lteec2$/\-lteec/g" {} +
+    find . -name "Makefile" -exec sed -i "s/\-lckteec2$/\-lckteec/g" {} +
+    find . -name "Makefile" -exec sed -i "s/optee2_armtz/optee_armtz/g" {} +
+    make clean
+    make -j$(nproc)
+
+    mkdir -p to_buildroot-aarch64-cba/lib/optee_armtz
+    mkdir -p to_buildroot-aarch64-cba/bin
+
+    cp out-cba-aarch64/*.ta to_buildroot-aarch64-cba/lib/optee_armtz
+    cp host/context_based_authentication_demo to_buildroot-aarch64-cba/bin
+
+    cd "$ROOT"
+}
+
+step_8() {
     cd "$ROOT/security_test"
 
     OLD_CFLAGS=$CFLAGS
@@ -407,7 +525,7 @@ step_7() {
     export CFLAGS=$OLD_CFLAGS
 }
 
-step_8() {
+step_9() {
     cd "$ROOT"
 
     # Call extra step to copy ".TA" files
@@ -420,11 +538,14 @@ step_8() {
     cd $ROOT
 }
 
-step_9() {
+step_10() {
     cd "$ROOT"
 
     mkdir -p linux/build-aarch64/
-    cp $LINUX_CONF_PATH linux/build-aarch64/.config
+
+    if [ "$LOCAL_CONFS" = "false" ]; then
+        cp $LINUX_CONF_PATH $LINUX_LOCAL_CONF_PATH
+    fi
 
     cd linux
 
@@ -433,7 +554,7 @@ step_9() {
     cd $ROOT
 }
 
-step_10() {
+step_11() {
     cd "$ROOT"
 
     dtc -I dts -O dtb $DTS_FILE > rpi4-ws/rpi4.dtb
@@ -464,6 +585,9 @@ for arg in "$@"; do
     --all)
       RUN_ALL=true
       ;;
+    --local-confs)
+      LOCAL_CONFS=true
+      ;;
     --steps=*)
       STEP_RANGE="${arg#*=}"
       ;;
@@ -489,12 +613,26 @@ done
 # Parse params
 if [ "$RUN_ALL" = true ]; then
   STEP_START=0
-  STEP_END=10
+  STEP_END=11
 elif [[ "$STEP_RANGE" =~ ^([0-9]+)-([0-9]+)$ ]]; then
   STEP_START=${BASH_REMATCH[1]}
   STEP_END=${BASH_REMATCH[2]}
 else
   print_usage
+fi
+
+# Check for CBA:
+config_path=""
+if [ "${LOCAL_CONF:-}" = "true" ]; then
+    config_path="$BUILDROOT_LOCAL_CONF_PATH"
+else
+    config_path="$BUILDROOT_CONF_PATH"
+fi
+
+if grep -q "optee_os_cba" "$config_path" || grep -q "cba_ta" "$config_path"; then
+    BUILD_CBA="true"
+else
+    BUILD_CBA="false"
 fi
 
 # Run steps
