@@ -1,6 +1,6 @@
 [submodule "CROSSCON-Hypervisor"]
 	path = CROSSCON-Hypervisor
-	url = https://github.com/3mdeb/CROSSCON-Hypervisor
+	url = https://github.com/crosscon/crosscon-hypervisor-uc12.git
 [submodule "optee_client"]
 	path = optee_client
 	url = git@github.com:crosscon/optee_client.git
