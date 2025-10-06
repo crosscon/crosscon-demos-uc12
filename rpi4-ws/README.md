@@ -8,9 +8,13 @@ build virtual TEEs.
 Clone the repository by executing following command.
 
 ```bash
-git clone --recurse-submodules git@github.com:3mdeb/CROSSCON-Hypervisor-and-TEE-Isolation-Demos.git crosscon-demos && \
+git clone --recurse-submodules git@github.com:crosscon/crosscon-demos-uc12.git crosscon-demos && \
 cd crosscon-demos
 ```
+
+_Note: The above command might fail if you're not a member of `Crosscon`
+organization. In that case you need to update remotes to use https protocol in
+the above command and in submodules configuration as well._
 
 ## Build & run the container
 
