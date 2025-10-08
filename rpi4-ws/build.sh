@@ -623,13 +623,13 @@ fi
 
 # Check for CBA:
 config_path=""
-if [ "${LOCAL_CONF:-}" = "true" ]; then
+if [ "${LOCAL_CONFS:-}" = "true" ]; then
     config_path="$BUILDROOT_LOCAL_CONF_PATH"
 else
     config_path="$BUILDROOT_CONF_PATH"
 fi
 
-if grep -q "optee_os_cba" "$config_path" || grep -q "cba_ta" "$config_path"; then
+if grep -q "cba_ta" "$config_path"; then
     BUILD_CBA="true"
 else
     BUILD_CBA="false"

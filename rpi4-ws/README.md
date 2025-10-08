@@ -8,7 +8,7 @@ build virtual TEEs.
 Clone the repository by executing following command.
 
 ```bash
-git clone --recurse-submodules git@github.com:3mdeb/CROSSCON-Hypervisor-and-TEE-Isolation-Demos.git crosscon-demos && \
+git clone --recurse-submodules https://github.com/crosscon/crosscon-demos-uc12.git crosscon-demos && \
 cd crosscon-demos
 ```
 
