@@ -1,10 +1,10 @@
 #include <config.h>
 
 // Linux Image
-VM_IMAGE(linux_image, "../lloader/linux-rpi4.bin");
+VM_IMAGE(linux_image, "../lloader/linux-rpi4.bin")
 
 // Linux VM configuration
-struct vm_config linux = {
+struct vm_config linux_vm = {
     .image = {
         .base_addr = 0x20200000,
         .load_addr = VM_IMAGE_OFFSET(linux_image),
@@ -18,33 +18,35 @@ struct vm_config linux = {
     .platform = {
         .cpu_num = 1,
         .region_num = 1,
-        .regions =  (struct mem_region[]) {
+        .regions =  (struct vm_mem_region[]) {
             {
                 .base = 0x20000000,
                 .size = 0x38000000,
             }
         },
         .dev_num = 4,
-        .devs =  (struct dev_region[]) {
+        .devs =  (struct vm_dev_region[]) {
             {
+                .id   = 0,
                 .pa   = 0xfc000000,
                 .va   = 0xfc000000,
                 .size = 0x03000000,
-
             },
             {
+                .id   = 0,
                 .pa   = 0x600000000,
                 .va   = 0x600000000,
                 .size = 0x200000000,
-
             },
             {
+                .id   = 0,
                 .interrupt_num = 1,
                 .interrupts = (irqid_t[]) {
                     0x5d + 32 // serial
                 }
             },
             {
+                .id   = 0,
                 /* Arch timer interrupt */
                 .interrupt_num = 2,
                 .interrupts = (irqid_t[]) {
@@ -63,10 +65,10 @@ struct vm_config linux = {
 };
 
 // Linux Image
-VM_IMAGE(linux_image2, "../lloader/linux2-rpi4.bin");
+VM_IMAGE(linux_image2, "../lloader/linux2-rpi4.bin")
 
 // Linux VM configuration
-struct vm_config linux2 = {
+struct vm_config linux2_vm = {
     .image = {
         .base_addr = 0x20200000,
         .load_addr = VM_IMAGE_OFFSET(linux_image2),
@@ -80,30 +82,34 @@ struct vm_config linux2 = {
     .platform = {
         .cpu_num = 1,
         .region_num = 1,
-        .regions =  (struct mem_region[]) {
+        .regions =  (struct vm_mem_region[]) {
             {
                 .base = 0x20000000,
                 .size = 0x38000000,
             }
         },
         .dev_num = 4,
-        .devs =  (struct dev_region[]) {
+        .devs =  (struct vm_dev_region[]) {
             {
+                .id   = 0,
                 .pa   = 0xfc000000,
                 .va   = 0xfc000000,
                 .size = 0x03000000,
 
             },
             {
+                .id   = 0,
                 .pa   = 0x600000000,
                 .va   = 0x600000000,
                 .size = 0x200000000,
             },
             {
+                .id   = 0,
                 .interrupt_num = 1,
                 .interrupts = (irqid_t[]) { 0x79 + 32 } // serial
             },
             {
+                .id   = 0,
                 /* Arch timer interrupt */
                 .interrupt_num = 2,
                 .interrupts = (irqid_t[]) {
@@ -122,14 +128,14 @@ struct vm_config linux2 = {
 };
 
 struct config config = {
-    CONFIG_HEADER
+    // CONFIG_HEADER
     .shmemlist_size = 1,
     .shmemlist = (struct shmem[]) {
         [0] = {.size = 0x00200000,},
     },
     .vmlist_size = 2,
-    .vmlist = {
-        &linux,
-        &linux2
+    .vmlist = (struct vm_config*[]) {
+        &linux_vm,
+        &linux2_vm
     }
 };

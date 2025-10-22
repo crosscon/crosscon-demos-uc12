@@ -1,0 +1,29 @@
+From 09ed4946a4bde39a60f8b056553aaaa55f653739 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Micha=C5=82=20Iwanicki?= <michal.iwanicki@3mdeb.com>
+Date: Wed, 22 Oct 2025 11:50:57 +0200
+Subject: [PATCH] Makefile: add -Wno-conversion flag
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Michał Iwanicki <michal.iwanicki@3mdeb.com>
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index d7887f56916b..43b61e7516bb 100644
+--- a/Makefile
++++ b/Makefile
+@@ -321,7 +321,7 @@ else ifeq ($(CC_IS_CLANG), y)
+ endif
+ 
+ override CFLAGS+=-O$(OPTIMIZATIONS) -Wall -Werror -Wextra $(cflags_warns) \
+-	-ffreestanding -std=c11 -fno-pic \
++	-ffreestanding -std=c11 -fno-pic -Wno-conversion \
+ 	$(arch-cflags) $(platform-cflags) $(CPPFLAGS) $(debug_flags)
+ 
+ override ASFLAGS+=$(CFLAGS) $(arch-asflags) $(platform-asflags)
+-- 
+2.47.1
+

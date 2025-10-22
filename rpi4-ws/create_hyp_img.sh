@@ -23,20 +23,23 @@ patch() {
 
     cd "$ROOT/CROSSCON-Hypervisor"
 
+    for patch_file in "$ROOT/rpi4-ws/patches/hyp/"*.patch; do
     # Check if patch is applied: https://stackoverflow.com/a/66755317
-    set +e
-    git apply --check "$ROOT/rpi4-ws/patches/0001-armv8-aborts.c-add-printk-to-aborts_data_lower.patch" 2>/dev/null
-    git_check_apply=$?
-    git apply --reverse --check "$ROOT/rpi4-ws/patches/0001-armv8-aborts.c-add-printk-to-aborts_data_lower.patch" 2>/dev/null
-    git_check_reverse_apply=$?
-    set -e
+        set +e
+        echo "# Applying $(basename "$patch_file")"
+        sudo -u "$SUDO_USER" git apply --check "$patch_file" 2>/dev/null
+        git_check_apply=$?
+        sudo -u "$SUDO_USER" git apply --reverse --check "$patch_file" 2>/dev/null
+        git_check_reverse_apply=$?
+        set -e
 
-    if [[ $git_check_apply -eq 0 && $git_check_reverse_apply -ne 0 ]]; then
-        git apply "$ROOT/rpi4-ws/patches/0001-armv8-aborts.c-add-printk-to-aborts_data_lower.patch"
-    elif [[ $git_check_apply -ne 0 && $git_check_reverse_apply -ne 0 ]]; then
-        echo "Can't apply patch"
-        exit 1
-    fi
+        if [[ $git_check_apply -eq 0 && $git_check_reverse_apply -ne 0 ]]; then
+            sudo -u "$SUDO_USER" git apply "$patch_file"
+        elif [[ $git_check_apply -ne 0 && $git_check_reverse_apply -ne 0 ]]; then
+            echo "Can't apply patch"
+            exit 1
+        fi
+    done
 
     cd "$ROOT"
 }
@@ -131,12 +134,14 @@ cp -v rpi4-ws/bin/bl31.bin $MOUNT_DIR
 cp -v rpi4-ws/bin/u-boot.bin $MOUNT_DIR
 cp -v lloader/linux*.bin $MOUNT_DIR
 cp -vr rpi4-ws/firmware/boot/start* $MOUNT_DIR
-cp -uv CROSSCON-Hypervisor/bin/rpi4/builtin-configs/$CONFIG_NAME/crossconhyp.bin $MOUNT_DIR
+cp -uv CROSSCON-Hypervisor/bin/rpi4/$CONFIG_NAME/crossconhyp.bin $MOUNT_DIR
 
 echo "# Unmounting the image"
 umount $MOUNT_DIR
 
 echo "# Detaching loop device"
 losetup -d "$LOOP_DEV"
+
+sync
 
 echo "# Done!"

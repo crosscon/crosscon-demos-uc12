@@ -1,6 +1,6 @@
-From a72abbcc7ba907f5467972b3bd1a04a399bb5596 Mon Sep 17 00:00:00 2001
+From 1735bf0735ddfba805596761bae2b29208e9ea1e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Micha=C5=82=20Iwanicki?= <michal.iwanicki@3mdeb.com>
-Date: Wed, 18 Jun 2025 12:46:22 +0200
+Date: Wed, 22 Oct 2025 11:48:03 +0200
 Subject: [PATCH] armv8: aborts.c: add printk to aborts_data_lower
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -12,15 +12,15 @@ Signed-off-by: Michał Iwanicki <michal.iwanicki@3mdeb.com>
  1 file changed, 3 insertions(+)
 
 diff --git a/src/arch/armv8/aborts.c b/src/arch/armv8/aborts.c
-index a7f5adccf741..294b010db403 100644
+index 8161ef7b72b9..95876789a0ef 100644
 --- a/src/arch/armv8/aborts.c
 +++ b/src/arch/armv8/aborts.c
-@@ -56,6 +56,9 @@ void aborts_data_lower(uint64_t iss, uint64_t far, uint64_t il)
+@@ -31,6 +31,9 @@ static void aborts_data_lower(unsigned long iss, unsigned long far, unsigned lon
  
      vaddr_t addr = far;
-     emul_handler_t handler = vm_emul_get_mem(cpu.vcpu->vm, addr);
+     emul_handler_t handler = vm_emul_get_mem(cpu()->vcpu->vm, addr);
 +    if (addr <= 0xff000000) {
-+        printk("CROSSCONHYP DATA ABORT: 0x%x\n", addr);
++        WARNING("CROSSCONHYP DATA ABORT: 0x%x\n", addr);
 +    }
      if (handler != NULL) {
          struct emul_access emul;
